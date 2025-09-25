@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Ouverture Mur Mandela</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-mountain"></i> Dashboard Mur Mandela</h1>
+            <div class="header-stats">
+                <span class="date" id="currentDate"></span>
+            </div>
+        </header>
+
+        <main>
+            <!-- KPI Cards -->
+            <section class="kpi-section">
+                <div class="kpi-card">
+                    <div class="kpi-icon"><i class="fas fa-route"></i></div>
+                    <div class="kpi-content">
+                        <h3>Total Voies</h3>
+                        <span class="kpi-number" id="totalRoutes">0</span>
+                    </div>
+                </div>
+                <div class="kpi-card success">
+                    <div class="kpi-icon"><i class="fas fa-check-circle"></i></div>
+                    <div class="kpi-content">
+                        <h3>Terminées</h3>
+                        <span class="kpi-number" id="completedRoutes">0</span>
+                    </div>
+                </div>
+                <div class="kpi-card warning">
+                    <div class="kpi-icon"><i class="fas fa-clock"></i></div>
+                    <div class="kpi-content">
+                        <h3>En Cours</h3>
+                        <span class="kpi-number" id="inProgressRoutes">0</span>
+                    </div>
+                </div>
+                <div class="kpi-card info">
+                    <div class="kpi-icon"><i class="fas fa-plus-circle"></i></div>
+                    <div class="kpi-content">
+                        <h3>À Ouvrir</h3>
+                        <span class="kpi-number" id="toOpenRoutes">0</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Graphique de répartition par cotation -->
+            <section class="charts-section">
+                <div class="chart-container">
+                    <h3>Répartition par Cotation</h3>
+                    <canvas id="gradeChart"></canvas>
+                </div>
+            </section>
+
+            <!-- Tableau des voies -->
+            <section class="routes-section">
+                <div class="section-header">
+                    <h2>Gestion des Voies</h2>
+                    <button class="btn-primary" onclick="addRoute()">
+                        <i class="fas fa-plus"></i> Ajouter Voie
+                    </button>
+                </div>
+                <div class="routes-table-container">
+                    <table class="routes-table">
+                        <thead>
+                            <tr>
+                                <th>Ligne</th>
+                                <th>Zone</th>
+                                <th>Cotation</th>
+                                <th>Couleur</th>
+                                <th>Prises</th>
+                                <th>Type</th>
+                                <th>Ouvreur</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="routesTableBody"></tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modale pour ajouter/éditer une voie -->
+    <div id="routeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Ajouter une voie</h3>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <form id="routeForm" onsubmit="saveRoute(event)">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="routeLine">Ligne</label>
+                        <input type="number" id="routeLine" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="routeZone">Zone</label>
+                        <select id="routeZone" required>
+                            <option value="1">Zone 1</option>
+                            <option value="2">Zone 2</option>
+                            <option value="3">Zone 3</option>
+                            <option value="4">Zone 4</option>
+                            <option value="5">Zone 5</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="routeGrade">Cotation</label>
+                        <select id="routeGrade" required>
+                            <option value="4B">4B</option>
+                            <option value="5A">5A</option>
+                            <option value="5B">5B</option>
+                            <option value="5C">5C</option>
+                            <option value="6A">6A</option>
+                            <option value="6B">6B</option>
+                            <option value="6C">6C</option>
+                            <option value="7A">7A</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="routeHolds">Prises</label>
+                        <input type="number" id="routeHolds" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="routeType">Type</label>
+                        <select id="routeType" required>
+                            <option value="Technique">Technique</option>
+                            <option value="Physique">Physique</option>
+                            <option value="Résistance">Résistance</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="routeOpener">Ouvreur</label>
+                        <input type="text" id="routeOpener" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="routeStatus">Statut</label>
+                        <select id="routeStatus" required>
+                            <option value="to_open">À ouvrir</option>
+                            <option value="in_progress">En cours</option>
+                            <option value="completed">Terminé</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="closeModal()">Annuler</button>
+                    <button type="submit" class="btn-primary">Sauvegarder</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
