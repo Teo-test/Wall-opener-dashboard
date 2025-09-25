@@ -4,7 +4,7 @@ Un tableau de bord interactif pour suivre et gérer les voies d'escalade du mur 
 
 ## 🌐 Demo
 
-Voir la démo en direct : [Wall Opener Dashboard](https://teo-code.github.io/Wall-opener-dashboard/)
+Voir la démo en direct : [Wall Opener Dashboard](https://teo-test.github.io/Wall-opener-dashboard/)
 
 ## ✨ Fonctionnalités
 
