@@ -57,6 +57,9 @@ header h1 {
 
 /* Graphiques */
 .charts-section {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 3 colonnes */
+    gap: 20px;
     margin-bottom: 20px;
 }
 
@@ -67,6 +70,42 @@ header h1 {
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     margin-bottom: 20px;
 }
+
+/* Style pour le graphique des cotations */
+.chart-container.grade-chart {
+    height: 400px; /* Hauteur fixe */
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.grade-chart-title {
+    text-align: center;
+    margin-bottom: 15px;
+    font-weight: 600;
+    color: #333;
+}
+
+
+
+/* Style pour le graphique des couleurs */
+.chart-container.color-chart {
+    max-height: 500px; /*Hauteur fixe pour un rendu cohérent */
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 15px;
+}
+
+.color-chart-title {
+    text-align: center;
+    margin-bottom: 10px;
+    font-weight: 600;
+    color: #333;
+}
+
 
 /* Tableau des voies */
 .routes-table {
