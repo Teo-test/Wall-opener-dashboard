@@ -215,3 +215,136 @@ header h1 {
     display: flex;
     justify-content: flex-end;
 }
+
+/* Adaptation pour mobile (écrans < 768px) */
+@media (max-width: 767px) {
+    /* Conteneur principal */
+    .container {
+        padding: 10px;
+    }
+
+    /* KPI Cards : empilés verticalement */
+    .kpi-section {
+        grid-template-columns: 1fr; /* 1 colonne */
+        gap: 10px;
+    }
+
+    /* Graphiques : empilés verticalement et plus compacts */
+    .charts-section {
+        grid-template-columns: 1fr; /* 1 colonne */
+        gap: 15px;
+    }
+
+    .chart-container {
+        height: 250px; /* Hauteur réduite */
+        padding: 10px;
+    }
+
+    /* Tableau : scroll horizontal */
+    .routes-table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch; /* Scroll fluide sur iOS */
+    }
+
+    .routes-table {
+        min-width: 600px; /* Largeur minimale pour éviter le rétrécissement */
+        font-size: 12px; /* Texte plus petit */
+    }
+
+    .routes-table th, .routes-table td {
+        padding: 6px 8px; /* Espacement réduit */
+        white-space: nowrap; /* Éviter les retours à la ligne */
+    }
+
+    /* Filtres : empilés verticalement */
+    .filters {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .filters select {
+        width: 100%;
+    }
+
+    /* Modale : pleine largeur */
+    .modal-content {
+        width: 95%; /* Presque pleine largeur */
+        margin: 10px;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr; /* 1 colonne pour les champs */
+    }
+
+    /* Boutons */
+    .btn-primary, .btn-secondary {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+
+    /* En-têtes de section */
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .section-header h2 {
+        font-size: 18px;
+    }
+}
+
+/* Adaptation pour très petits écrans (< 480px) */
+@media (max-width: 479px) {
+    .kpi-card {
+        padding: 10px;
+    }
+
+    .kpi-number {
+        font-size: 18px;
+    }
+
+    .chart-container {
+        height: 200px; /* Graphiques encore plus compacts */
+    }
+
+    /* Cacher les légendes des graphiques si trop serré */
+    .chart-container {
+        margin-bottom: 20px;
+    }
+}
+
+/* Style pour la modale sur mobile */
+@media (max-width: 767px) {
+    .modal {
+        background: rgba(0, 0, 0, 0.7);
+    }
+
+    .mobile-modal .modal-content {
+        margin: 0;
+        border-radius: 0;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .modal-actions {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .modal-actions button {
+        width: 100%;
+    }
+}
+
+/* Style pour les cellules du tableau sur mobile */
+@media (max-width: 767px) {
+    .routes-table td:not(:first-child) {
+        padding-left: 15px; /* Espacement pour séparer les colonnes */
+    }
+
+    /* Couleur de fond alternée pour les lignes */
+    .routes-table tr:nth-child(even) {
+        background-color: rgba(0, 0, 0, 0.02);
+    }
+}

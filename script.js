@@ -158,7 +158,7 @@ document.addEventListener('DOMContentLoaded', function() {
         filteredRoutes.filter(r => r.grade.toLowerCase() === grade.toLowerCase()).length
     );
 
-    
+
     // Graphique par cotation (version améliorée)
     const gradeCtx = document.getElementById('gradeChart');
     if (gradeCtx) {
@@ -265,6 +265,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Graphique par couleur (version optimisée)
     const colorCtx = document.getElementById('colorChart');
+    
 if (colorCtx) {
     const colors = [...new Set(filteredRoutes.map(r => r.color))];
     const colorCounts = colors.map(color =>
@@ -349,19 +350,27 @@ if (colorCtx) {
        updateDashboard();
    }
 
-   // Ouvrir la modale pour ajouter/éditer une voie
-   function addRoute() {
-       document.getElementById('modalTitle').textContent = "Ajouter une voie";
-       document.getElementById('routeForm').reset();
-       document.getElementById('routeHolds').value = 27;
-       document.getElementById('routeOpener').value = "Me";
-       document.getElementById('routeModal').style.display = 'block';
-   }
+    function addRoute() {
+        document.getElementById('modalTitle').textContent = "Ajouter une voie";
+        document.getElementById('routeForm').reset();
+        document.getElementById('routeHolds').value = 27;
+        document.getElementById('routeOpener').value = "Me";
 
-   // Fermer la modale
-   function closeModal() {
-       document.getElementById('routeModal').style.display = 'none';
-   }
+        // Ajoute une classe pour mobile
+        document.getElementById('routeModal').classList.add('mobile-modal');
+        document.getElementById('routeModal').style.display = 'block';
+
+        // Fermer la modale en cliquant hors du contenu
+        document.getElementById('routeModal').onclick = function(e) {
+            if (e.target === this) closeModal();
+        };
+    }
+
+    function closeModal() {
+        document.getElementById('routeModal').style.display = 'none';
+        document.getElementById('routeModal').classList.remove('mobile-modal');
+    }
+
 
    // Sauvegarder une voie
    async function saveRoute(event) {
