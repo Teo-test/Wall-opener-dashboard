@@ -133,9 +133,44 @@ function updateKPIs() {
 /**
  * Met à jour le tableau des voies
  */
+// Variables globales pour la pagination
+let currentPage = 1;
+const rowsPerPage = 10;
+let sortedRoutes = [];
+let sortColumn = null;
+let sortDirection = 1; // 1 = croissant, -1 = décroissant
+
+/**
+ * Met à jour le tableau des voies avec pagination et tri
+ */
 function updateRoutesTable() {
+    // Appliquer le tri si une colonne est sélectionnée
+    if (sortColumn !== null) {
+        sortedRoutes = [...filteredRoutes].sort((a, b) => {
+            let valA = a[Object.keys(a)[sortColumn]];
+            let valB = b[Object.keys(a)[sortColumn]];
+
+            // Gestion des cas particuliers (ex: statuts, couleurs)
+            if (sortColumn === 7) { // Statut
+                const statusOrder = { 'to_open': 1, 'in_progress': 2, 'completed': 3 };
+                return (statusOrder[valA] - statusOrder[valB]) * sortDirection;
+            } else if (typeof valA === 'string') {
+                return valA.localeCompare(valB) * sortDirection;
+            } else {
+                return (valA - valB) * sortDirection;
+            }
+        });
+    } else {
+        sortedRoutes = [...filteredRoutes];
+    }
+
+    // Pagination
+    const startIndex = (currentPage - 1) * rowsPerPage;
+    const paginatedRoutes = sortedRoutes.slice(startIndex, startIndex + rowsPerPage);
+
+    // Générer le tableau
     const tableBody = document.getElementById('routesTableBody');
-    tableBody.innerHTML = filteredRoutes.map(route => `
+    tableBody.innerHTML = paginatedRoutes.map(route => `
         <tr>
             <td>${route.line}</td>
             <td>Zone ${route.zone}</td>
@@ -147,29 +182,119 @@ function updateRoutesTable() {
             <td>${route.holds}</td>
             <td>${route.type}</td>
             <td>${route.opener}</td>
-            <td>${translateStatus(route.status)}</td>
+            <td class="status-${route.status}">${translateStatus(route.status)}</td>
             <td>${route.notes}</td>
             <td>
                 <button onclick="editRoute(${route.line})"><i class="fas fa-edit"></i></button>
             </td>
         </tr>
     `).join('');
+
+    // Mettre à jour la pagination
+    updatePagination();
 }
 
 /**
- * Filtre les voies selon les critères sélectionnés
+ * Met à jour les boutons de pagination
  */
-function filterRoutes() {
-    const zoneFilter = document.getElementById('zoneFilter').value;
-    const statusFilter = document.getElementById('statusFilter').value;
+function updatePagination() {
+    const totalPages = Math.ceil(sortedRoutes.length / rowsPerPage);
+    document.getElementById('pageInfo').textContent = `Page ${currentPage}/${totalPages}`;
 
-    filteredRoutes = routes.filter(route => {
-        return (!zoneFilter || route.zone === parseInt(zoneFilter)) &&
-               (!statusFilter || route.status === statusFilter);
+    document.getElementById('prevPage').disabled = currentPage <= 1;
+    document.getElementById('nextPage').disabled = currentPage >= totalPages;
+}
+
+/**
+ * Passe à la page précédente
+ */
+function prevPage() {
+    if (currentPage > 1) {
+        currentPage--;
+        updateRoutesTable();
+    }
+}
+
+/**
+ * Passe à la page suivante
+ */
+function nextPage() {
+    const totalPages = Math.ceil(sortedRoutes.length / rowsPerPage);
+    if (currentPage < totalPages) {
+        currentPage++;
+        updateRoutesTable();
+    }
+}
+
+/**
+ * Trie le tableau par colonne
+ * @param {number} columnIndex - Index de la colonne
+ */
+function sortTable(columnIndex) {
+    if (sortColumn === columnIndex) {
+        sortDirection *= -1; // Inverse le sens du tri
+    } else {
+        sortColumn = columnIndex;
+        sortDirection = 1;
+    }
+
+    // Mettre à jour les icônes de tri
+    document.querySelectorAll('.routes-table th i').forEach((icon, index) => {
+        icon.className = 'fas fa-sort';
+        if (index === columnIndex) {
+            icon.className = sortDirection === 1 ? 'fas fa-sort-up' : 'fas fa-sort-down';
+        }
     });
 
-    updateDashboard();
+    updateRoutesTable();
 }
+
+/**
+ * Filtre les voies selon les critères
+ */
+function filterRoutes() {
+    currentPage = 1; // Réinitialiser la pagination
+    const zoneFilter = document.getElementById('zoneFilter').value;
+    const statusFilter = document.getElementById('statusFilter').value;
+    const gradeFilter = document.getElementById('gradeFilter').value;
+
+    filteredRoutes = routes.filter(route => {
+        const zoneMatch = !zoneFilter || route.zone == zoneFilter;
+        const statusMatch = !statusFilter || route.status === statusFilter;
+        const gradeMatch = !gradeFilter || route.grade.startsWith(gradeFilter);
+
+        return zoneMatch && statusMatch && gradeMatch;
+    });
+
+    updateRoutesTable();
+}
+
+/**
+ * Recherche dans le tableau
+ */
+function searchRoutes() {
+    currentPage = 1;
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+
+    if (searchTerm === '') {
+        filteredRoutes = [...routes];
+    } else {
+        filteredRoutes = routes.filter(route =>
+            route.line.toString().includes(searchTerm) ||
+            `Zone ${route.zone}`.toLowerCase().includes(searchTerm) ||
+            route.grade.toLowerCase().includes(searchTerm) ||
+            route.color.toLowerCase().includes(searchTerm) ||
+            route.holds.toString().includes(searchTerm) ||
+            route.type.toLowerCase().includes(searchTerm) ||
+            route.opener.toLowerCase().includes(searchTerm) ||
+            translateStatus(route.status).toLowerCase().includes(searchTerm) ||
+            route.notes.toLowerCase().includes(searchTerm)
+        );
+    }
+
+    updateRoutesTable();
+}
+
 
 // ===== GESTION DES GRAPHIQUES =====
 /**

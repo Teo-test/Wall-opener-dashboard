@@ -6,7 +6,7 @@
     <title>Dashboard Mur Mandela</title>
     <!-- Font Awesome pour les icônes -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <!-- Chart.js pour les graphiques -->
+     <!-- Chart.js pour les graphiques -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Plugin pour les labels des graphiques -->
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
@@ -85,13 +85,19 @@
             </section>
 
 
-            <!-- Section de gestion des voies -->
+            <!-- Tableau des voies -->
             <section class="routes-section">
                 <div class="section-header">
                     <h2>Gestion des Voies</h2>
-                    <button class="btn-primary" onclick="addRoute()">
-                        <i class="fas fa-plus"></i> Ajouter Voie
-                    </button>
+                    <div class="table-controls">
+                        <button class="btn-primary" onclick="addRoute()">
+                            <i class="fas fa-plus"></i> Ajouter Voie
+                        </button>
+                        <div class="search-box">
+                            <input type="text" id="searchInput" placeholder="Rechercher..." onkeyup="searchRoutes()">
+                            <i class="fas fa-search"></i>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Filtres -->
@@ -103,6 +109,7 @@
                         <option value="3">Zone 3</option>
                         <option value="4">Zone 4</option>
                         <option value="5">Zone 5</option>
+                        <option value="6">Zone 6</option>
                     </select>
                     <select id="statusFilter" onchange="filterRoutes()">
                         <option value="">Tous statuts</option>
@@ -110,21 +117,29 @@
                         <option value="in_progress">En cours</option>
                         <option value="completed">Terminé</option>
                     </select>
+                    <select id="gradeFilter" onchange="filterRoutes()">
+                        <option value="">Toutes cotations</option>
+                        <option value="4">Niveau 4</option>
+                        <option value="5">Niveau 5</option>
+                        <option value="6">Niveau 6</option>
+                        <option value="7">Niveau 7</option>
+                        <option value="8">Niveau 8</option>
+                    </select>
                 </div>
 
-                <!-- Tableau des voies -->
+                <!-- Conteneur du tableau avec scroll horizontal -->
                 <div class="routes-table-container">
                     <table class="routes-table">
                         <thead>
                             <tr>
-                                <th>Ligne</th>
-                                <th>Zone</th>
-                                <th>Cotation</th>
-                                <th>Couleur</th>
-                                <th>Prises</th>
-                                <th>Type</th>
-                                <th>Ouvreur</th>
-                                <th>Statut</th>
+                                <th onclick="sortTable(0)">Ligne <i class="fas fa-sort"></i></th>
+                                <th onclick="sortTable(1)">Zone <i class="fas fa-sort"></i></th>
+                                <th onclick="sortTable(2)">Cotation <i class="fas fa-sort"></i></th>
+                                <th onclick="sortTable(3)">Couleur <i class="fas fa-sort"></i></th>
+                                <th onclick="sortTable(4)">Prises <i class="fas fa-sort"></i></th>
+                                <th onclick="sortTable(5)">Type <i class="fas fa-sort"></i></th>
+                                <th onclick="sortTable(6)">Ouvreur <i class="fas fa-sort"></i></th>
+                                <th onclick="sortTable(7)">Statut <i class="fas fa-sort"></i></th>
                                 <th>Notes</th>
                                 <th>Actions</th>
                             </tr>
@@ -132,7 +147,15 @@
                         <tbody id="routesTableBody"></tbody>
                     </table>
                 </div>
+
+                <!-- Pagination -->
+                <div class="pagination">
+                    <button id="prevPage" onclick="prevPage()" disabled><i class="fas fa-chevron-left"></i></button>
+                    <span id="pageInfo">Page 1/1</span>
+                    <button id="nextPage" onclick="nextPage()" disabled><i class="fas fa-chevron-right"></i></button>
+                </div>
             </section>
+
         </main>
     </div>
 

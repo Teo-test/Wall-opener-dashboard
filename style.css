@@ -102,63 +102,173 @@ header h1 {
 .color-chart .chart-wrapper { height: 300px; }
 
 /* ===== TABLEAU DES VOIES ===== */
-.routes-table-container {
-    overflow: hidden;
-    margin-bottom: 20px;
+.routes-section {
+    margin-bottom: 30px;
 }
 
-.routes-table {
-    width: 100%;
-    border-collapse: collapse;
-    background: white;
-    box-shadow: var(--box-shadow);
-    border-radius: var(--border-radius);
-    overflow: hidden;
-}
-
-.routes-table th, .routes-table td {
-    padding: 10px;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
-}
-
-.routes-table th {
-    background: var(--light-color);
-    font-weight: 600;
-}
-
-.routes-table tr:nth-child(even) {
-    background-color: rgba(0, 0, 0, 0.02);
-}
-
-.section-header {
+.table-controls {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 15px;
+    gap: 10px;
 }
 
+.search-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-box input {
+    padding: 8px 10px 8px 35px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    width: 200px;
+}
+
+.search-box i {
+    position: absolute;
+    left: 10px;
+    color: #aaa;
+}
+
+/* Filtres */
 .filters {
     display: flex;
     gap: 10px;
     margin-bottom: 15px;
+    flex-wrap: wrap;
 }
 
 .filters select {
     padding: 8px;
     border: 1px solid #ddd;
-    border-radius: var(--border-radius);
+    border-radius: 4px;
     background: white;
 }
 
+/* Conteneur du tableau */
+.routes-table-container {
+    overflow-x: auto;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    background: white;
+}
+
+/* Tableau */
+.routes-table {
+    width: 100%;
+    min-width: 800px;
+    border-collapse: collapse;
+}
+
+.routes-table th, .routes-table td {
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.routes-table th {
+    background: #f8f9fa;
+    font-weight: 600;
+    cursor: pointer;
+    position: relative;
+}
+
+.routes-table th i {
+    margin-left: 5px;
+    font-size: 12px;
+}
+
+.routes-table th:hover {
+    background: #e9ecef;
+}
+
+.routes-table tr:hover {
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.routes-table td:last-child {
+    text-align: center;
+}
+
+/* Couleur des statuts */
+.status-to_open { color: #6c757d; }
+.status-in_progress { color: #ffc107; }
+.status-completed { color: #28a745; }
+
+/* Boutons d'action */
+.routes-table button {
+    background: none;
+    border: none;
+    color: #007bff;
+    cursor: pointer;
+    padding: 5px;
+}
+
+.routes-table button i {
+    font-size: 16px;
+}
+
+/* Pagination */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.pagination button {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+.pagination button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Couleur des cases de couleur */
 .color-box {
     display: inline-block;
     width: 20px;
     height: 20px;
-    margin-right: 5px;
-    border: 1px solid #ddd;
+    margin-right: 8px;
     border-radius: 3px;
+    border: 1px solid #ddd;
 }
+
+/* Responsive */
+@media (max-width: 767px) {
+    .table-controls {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .search-box input {
+        width: 100%;
+    }
+
+    .filters {
+        flex-direction: column;
+    }
+
+    .filters select {
+        width: 100%;
+    }
+
+    .routes-table th, .routes-table td {
+        padding: 8px 6px;
+        font-size: 12px;
+    }
+}
+
 
 /* ===== BOUTONS ===== */
 .btn-primary {
