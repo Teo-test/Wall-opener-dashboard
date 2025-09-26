@@ -240,79 +240,85 @@ function initCharts() {
         });
     }
 
-    // Graphique par zone (empilé par statut)
-// Graphique par zone (adapté à tes données)
-const zoneCtx = document.getElementById('zoneChart');
-if (zoneCtx) {
-    // 1. Récupérer les zones UNIQUES présentes dans filteredRoutes
-    // const uniqueZones = [...new Set(filteredRoutes.map(r => r.zone))].sort((a, b) => a - b);
-    const uniqueZones = [1, 2, 3, 4, 5, 6]; // Zones fixes de 1 à 6
-    const statuses = ['Terminé', 'En cours', 'À ouvrir'];
-    const statusLabels = {
-        'Terminé': 'Terminé',
-        'En cours': 'En cours',
-        'À ouvrir': 'À ouvrir'
-    };
-    const statusColors = {
-        'Terminé': '#28a745',
-        'En cours': '#ffc107',
-        'À ouvrir': '#6c757d'
-    };
-
-    // 2. Préparer les données pour chaque statut et zone
-    const datasets = statuses.map(status => {
-        return {
-            label: statusLabels[status],
-            data: uniqueZones.map(zone => {
-                return filteredRoutes.filter(r =>
-                    r.zone === zone && r.status === status
-                ).length;
-            }),
-            backgroundColor: statusColors[status],
-            borderColor: '#ffffff',
-            borderWidth: 1
+    const zoneCtx = document.getElementById('zoneChart');
+    if (zoneCtx) {
+        // Zones fixes de 1 à 6
+        const uniqueZones = [1, 2, 3, 4, 5, 6];
+        const statuses = ['Terminé', 'En cours', 'À ouvrir']; // Statuts en français
+        const statusLabels = {
+            'Terminé': 'Terminé',
+            'En cours': 'En cours',
+            'À ouvrir': 'À ouvrir'
         };
-    });
+        const statusColors = {
+            'Terminé': '#28a745',   // Vert
+            'En cours': '#ffc107', // Jaune
+            'À ouvrir': '#6c757d'      // Gris
+        };
 
-    // 3. Créer le graphique empilé
-    new Chart(zoneCtx, {
-        type: 'bar',
-        data: {
-            labels: uniqueZones.map(z => `Zone ${z}`),
-            datasets: datasets
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { position: 'top' },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return `${context.dataset.label}: ${context.raw}`;
+        // Préparer les données pour chaque statut et zone
+        const datasets = statuses.map(status => {
+            return {
+                label: statusLabels[status],
+                data: uniqueZones.map(zone => {
+                    return filteredRoutes.filter(r =>
+                        r.zone === zone && r.status === status
+                    ).length;
+                }),
+                backgroundColor: statusColors[status],
+                borderColor: '#ffffff',
+                borderWidth: 1,
+                borderRadius: 4, // Coins arrondis
+                barPercentage: 0.8, // Largeur des barres
+                categoryPercentage: 0.7 // Espacement entre les groupes
+            };
+        });
+
+        // Créer le graphique avec barres groupées
+        new Chart(zoneCtx, {
+            type: 'bar',
+            data: {
+                labels: uniqueZones.map(z => `Zone ${z}`),
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.dataset.label}: ${context.raw}`;
+                            }
                         }
+                    },
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'top',
+                        formatter: (value) => value > 0 ? value : '',
+                        color: '#333',
+                        font: { weight: 'bold' }
                     }
                 },
-                datalabels: {
-                    anchor: 'end',
-                    align: 'top',
-                    formatter: (value) => value > 0 ? value : '',
-                    color: '#333',
-                    font: { weight: 'bold' }
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        stacked: false // Désactive l'empilement
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(0, 0, 0, 0.05)' },
+                        ticks: { stepSize: 1 }
+                    }
                 }
             },
-            scales: {
-                x: { stacked: true, grid: { display: false } },
-                y: {
-                    beginAtZero: true,
-                    grid: { color: 'rgba(0, 0, 0, 0.05)' },
-                    ticks: { stepSize: 1 }
-                }
-            }
-        },
-        plugins: [ChartDataLabels]
-    });
-}
+            plugins: [ChartDataLabels]
+        });
+    }
+
 
     // Graphique par couleur
     const colorCtx = document.getElementById('colorChart');
