@@ -79,11 +79,11 @@ async function loadData() {
                     line: parseInt(values[0]?.replace(/"/g, '').trim() || 0),
                     zone: parseInt(values[1]?.replace(/"/g, '').trim() || 0),
                     grade: values[2]?.replace(/"/g, '').trim() || "Inconnu",
-                    color: values[3]?.replace(/"/g, '').trim() || "Jaune",
+                    color: values[3]?.replace(/"/g, '').trim() || "Inconnu",
                     holds: parseInt(values[4]?.replace(/"/g, '').trim() || 0),
                     type: values[5]?.replace(/"/g, '').trim() || "Inconnu",
                     opener: values[6]?.replace(/"/g, '').trim() || "Inconnu",
-                    status: values[7]?.replace(/"/g, '').trim() || "to_open",
+                    status: values[7]?.replace(/"/g, '').trim() || "Inconnu",
                     notes: values[8]?.replace(/"/g, '').trim() || ""
                 };
             })
@@ -113,7 +113,7 @@ function updateDashboard() {
  */
 function updateKPIs() {
     const totalRoutes = filteredRoutes.length;
-    const completedRoutes = filteredRoutes.filter(r => r.status === 'À ouvrir').length;
+    const completedRoutes = filteredRoutes.filter(r => r.status === 'Terminé').length;
     const inProgressRoutes = filteredRoutes.filter(r => r.status === 'En cours').length;
     const toOpenRoutes = filteredRoutes.filter(r => r.status === 'À ouvrir').length;
 
