@@ -101,17 +101,6 @@ header h1 {
 .zone-chart .chart-wrapper { height: 350px; }
 .color-chart .chart-wrapper { height: 300px; }
 
-/* Responsive */
-@media (max-width: 767px) {
-    .charts-section {
-        grid-template-columns: 1fr; /* Une colonne sur mobile */
-    }
-    .chart-wrapper {
-        height: 250px; /* Hauteur réduite */
-    }
-}
-
-
 /* ===== TABLEAU DES VOIES ===== */
 .routes-table-container {
     overflow: hidden;
@@ -300,12 +289,22 @@ header h1 {
     }
 
     .chart-container {
-        height: 250px;
+        width: 95%;
         padding: 10px;
+        margin-left: auto;
+        margin-right: auto;
     }
 
     .chart-container.grade-chart {
-        height: 250px;
+        height: 400px;
+    }
+
+    .chart-container.zone-chart {
+        height: 450px;
+    }
+
+    .chart-container.color-chart {
+        height: 400px;
     }
 
     .routes-table-container {

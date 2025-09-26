@@ -42,7 +42,11 @@ function getColorCode(color) {
         "Orange": "#FFA500",
         "Bleu": "#4ECDC4",
         "Vert": "#6BCB77",
-        "Violet": "#B19CD9"
+        "Violet": "#B19CD9",
+        "Noir": "#333333",
+        "Rose": "#FF69B4",
+        "Gris": "#A9A9A9",
+        "Marron": "#8B4513"
     };
     return colorMap[color] || "#CCCCCC";
 }
@@ -202,7 +206,7 @@ function initCharts() {
                     borderWidth: 1,
                     borderRadius: 4,
                     borderSkipped: false,
-                    barPercentage: 0.7,
+                    barPercentage: 0.6,
                     categoryPercentage: 0.8
                 }]
             },
@@ -287,41 +291,67 @@ function initCharts() {
                 plugins: {
                     legend: {
                         position: 'bottom',
-                        align: 'start',
+                        align: 'center',
                         labels: {
-                            boxWidth: 12,
+                            usePointStyle: true,
+                            pointStyle: 'circle',
                             padding: 20,
                             font: {
-                                size: 12,
-                                weight: 'bold' // Texte en gras
+                                size: 13,
+                                weight: 'bold',
+                                family: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif"
                             }
                         }
                     },
                     tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleFont: { size: 14 },
+                        bodyFont: { size: 13 },
+                        padding: 20,
+                        cornerRadius: 6,
                         callbacks: {
                             label: function(context) {
-                                return `${context.dataset.label}: ${context.raw}`;
+                                return `${context.dataset.label}: ${context.raw} voies`;
                             }
                         }
                     },
                     datalabels: {
                         anchor: 'end',
                         align: 'top',
+                        offset: -5,
                         formatter: (value) => value > 0 ? value : '',
                         color: '#333',
-                        font: { weight: 'bold' }
+                        font: { 
+                            weight: 'bold',
+                            size: 11
+                        }
                     }
                 },
                 scales: {
                     x: {
-                        grid: { display: false },
-                        stacked: false // Désactive l'empilement
+                        grid: { display: true, color: 'rgba(0, 0, 0, 0.5)', drawBorder: false, },
+                        ticks: {
+                            font: { weight: 'bold' },
+                            color: '#666'
+                        }
                     },
                     y: {
                         beginAtZero: true,
-                        grid: { color: 'rgba(0, 0, 0, 0.05)' },
-                        ticks: { stepSize: 1 },
+                        grid: { 
+                            color: 'rgba(0, 0, 0, 0.15)',
+                            drawBorder: true
+                        },
+                        ticks: { 
+                            stepSize: 1,
+                            padding: 10,
+                            font: { size: 12 },
+                            color: '#666'
+                        }
                     }
+                },
+                animation: {
+                    duration: 500,
+                    easing: 'easeInOutQuart'
                 }
             },
             plugins: [ChartDataLabels]
