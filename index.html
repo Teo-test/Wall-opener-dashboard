@@ -4,19 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Dashboard Mur Mandela</title>
-    <!-- Font Awesome pour les icônes -->
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-     <!-- Chart.js pour les graphiques -->
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Plugin pour les labels des graphiques -->
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
-    <!-- Feuille de style CSS -->
+    <!-- Style CSS -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Conteneur principal -->
     <div class="container">
-        <!-- En-tête -->
         <header>
             <h1><i class="fas fa-mountain"></i> Dashboard Mur Mandela</h1>
             <div class="header-stats">
@@ -25,7 +22,7 @@
         </header>
 
         <main>
-            <!-- Section des KPI -->
+            <!-- KPI Cards -->
             <section class="kpi-section">
                 <div class="kpi-card">
                     <div class="kpi-icon"><i class="fas fa-route"></i></div>
@@ -57,25 +54,20 @@
                 </div>
             </section>
 
-            <!-- Section des graphiques -->
+            <!-- Graphiques -->
             <section class="charts-section">
-                <!-- Graphique par cotation -->
                 <div class="chart-container grade-chart">
                     <h3 class="chart-title">Répartition par Cotation</h3>
                     <div class="chart-wrapper">
                         <canvas id="gradeChart"></canvas>
                     </div>
                 </div>
-
-                <!-- Graphique par zone -->
                 <div class="chart-container zone-chart">
                     <h3 class="chart-title">Répartition par Zone</h3>
                     <div class="chart-wrapper">
                         <canvas id="zoneChart"></canvas>
                     </div>
                 </div>
-
-                <!-- Graphique par couleur -->
                 <div class="chart-container color-chart">
                     <h3 class="chart-title">Répartition par Couleur</h3>
                     <div class="chart-wrapper">
@@ -83,7 +75,6 @@
                     </div>
                 </div>
             </section>
-
 
             <!-- Tableau des voies -->
             <section class="routes-section">
@@ -127,7 +118,7 @@
                     </select>
                 </div>
 
-                <!-- Conteneur du tableau avec scroll horizontal -->
+                <!-- Tableau -->
                 <div class="routes-table-container">
                     <table class="routes-table">
                         <thead>
@@ -156,42 +147,72 @@
                 </div>
             </section>
 
+            <!-- Section du schéma du mur -->
+            <section class="wall-schema-section">
+                <h2>Schéma du Mur Mandela</h2>
+                <div class="wall-controls">
+                    <button id="showAllRoutes" class="btn-secondary">Tout afficher</button>
+                    <button id="hideAllRoutes" class="btn-secondary">Tout masquer</button>
+                    <div class="wall-legend">
+                        <span class="legend-item"><div class="color-box" style="background-color: #FFD700;"></div> Zone 1</span>
+                        <span class="legend-item"><div class="color-box" style="background-color: #FF6B6B;"></div> Zone 2</span>
+                        <span class="legend-item"><div class="color-box" style="background-color: #4ECDC4;"></div> Zone 3</span>
+                    </div>
+                </div>
+                <div class="wall-container">
+                    <div class="wall-schema">
+                        <img id="wallImage" src="./2025-Schema-Mandela.jpg"
+                            alt="Schéma du mur d'escalade" usemap="#wallmap">
+                        <map name="wallmap" id="wallmap">
+                            <!-- Les zones cliquables seront ajoutées dynamiquement par JavaScript -->
+                        </map>
+                    </div>
+                    <div class="route-info-panel" id="routeInfoPanel">
+                        <h3 id="routeInfoTitle">Informations sur la voie</h3>
+                        <div id="routeInfoContent">
+                            <p>Aucune voie sélectionnée</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
         </main>
     </div>
 
-    <!-- Bouton "Retour en haut" (mobile) -->
+    <!-- Bouton "Retour en haut" -->
     <button id="backToTop" class="back-to-top"><i class="fas fa-arrow-up"></i></button>
 
     <!-- Modale pour ajouter/éditer une voie -->
-    <div id="routeModal" class="modal">
+    <div id="editRouteModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 id="modalTitle">Ajouter une voie</h3>
-                <span class="close" onclick="closeModal()">&times;</span>
+                <h3 id="editModalTitle">Éditer une voie</h3>
+                <span class="close" onclick="closeEditModal()">&times;</span>
             </div>
-            <form id="routeForm" onsubmit="saveRoute(event)">
+            <form id="editRouteForm" onsubmit="saveEditedRoute(event)">
                 <div class="form-grid">
                     <div class="form-group">
-                        <label for="routeLine">Ligne</label>
-                        <input type="number" id="routeLine" min="1" max="36" required>
+                        <label for="editLine">Ligne</label>
+                        <input type="number" id="editLine" min="1" max="36" required>
                     </div>
                     <div class="form-group">
-                        <label for="routeZone">Zone</label>
-                        <select id="routeZone" required>
+                        <label for="editZone">Zone</label>
+                        <select id="editZone" required>
                             <option value="1">Zone 1</option>
                             <option value="2">Zone 2</option>
                             <option value="3">Zone 3</option>
                             <option value="4">Zone 4</option>
                             <option value="5">Zone 5</option>
+                            <option value="6">Zone 6</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="routeGrade">Cotation</label>
-                        <input type="text" id="routeGrade" placeholder="Ex: 6a, 6c+" required>
+                        <label for="editGrade">Cotation</label>
+                        <input type="text" id="editGrade" placeholder="Ex: 6a, 6c+" required>
                     </div>
                     <div class="form-group">
-                        <label for="routeColor">Couleur</label>
-                        <select id="routeColor" required>
+                        <label for="editColor">Couleur</label>
+                        <select id="editColor" required>
                             <option value="Jaune">Jaune</option>
                             <option value="Rouge">Rouge</option>
                             <option value="Blanc">Blanc</option>
@@ -199,15 +220,18 @@
                             <option value="Bleu">Bleu</option>
                             <option value="Vert">Vert</option>
                             <option value="Violet">Violet</option>
+                            <option value="Rose">Rose</option>
+                            <option value="Noir">Noir</option>
+                            <option value="Marron">Marron</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="routeHolds">Prises</label>
-                        <input type="number" id="routeHolds" value="27" required>
+                        <label for="editHolds">Prises</label>
+                        <input type="number" id="editHolds" required>
                     </div>
                     <div class="form-group">
-                        <label for="routeType">Type</label>
-                        <select id="routeType" required>
+                        <label for="editType">Type</label>
+                        <select id="editType" required>
                             <option value="Dalle">Dalle</option>
                             <option value="Technique">Technique</option>
                             <option value="Physique">Physique</option>
@@ -216,29 +240,30 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="routeOpener">Ouvreur</label>
-                        <input type="text" id="routeOpener" value="Me" required>
+                        <label for="editOpener">Ouvreur</label>
+                        <input type="text" id="editOpener" required>
                     </div>
                     <div class="form-group">
-                        <label for="routeStatus">Statut</label>
-                        <select id="routeStatus" required>
+                        <label for="editStatus">Statut</label>
+                        <select id="editStatus" required>
                             <option value="to_open">À ouvrir</option>
                             <option value="in_progress">En cours</option>
                             <option value="completed">Terminé</option>
                         </select>
                     </div>
                     <div class="form-group full-width">
-                        <label for="routeNotes">Notes</label>
-                        <textarea id="routeNotes" rows="2" placeholder="Notes optionnelles..."></textarea>
+                        <label for="editNotes">Notes</label>
+                        <textarea id="editNotes" rows="2" placeholder="Notes optionnelles..."></textarea>
                     </div>
                 </div>
                 <div class="modal-actions">
-                    <button type="button" class="btn-secondary" onclick="closeModal()">Annuler</button>
+                    <button type="button" class="btn-secondary" onclick="closeEditModal()">Annuler</button>
                     <button type="submit" class="btn-primary">Sauvegarder</button>
                 </div>
             </form>
         </div>
     </div>
+
 
     <!-- Script principal -->
     <script src="script.js"></script>

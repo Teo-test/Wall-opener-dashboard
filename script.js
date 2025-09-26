@@ -7,28 +7,28 @@ const SHEET_URL = `https://docs.google.com/spreadsheets/d/e/${SHEET_ID}/pub?outp
 const API_URL = "https://script.google.com/macros/s/AKfycbz7zoIOMCPMcSB2hhYJoGs2W_KzdrS5rH-nP07aMy2YVpTLCvqx5KaUubrXEt5_TGvE-w/exec";
 const SECRET_KEY = "1E2zrHhnUxgYL0PHaHq_4yzfrGQ_fbaiaSWY5SD9q8qm-ptPLw5pPBK7v"; // Doit correspondre à celle dans Apps Script
 
-   
 // Données globales
 let routes = [];
 let filteredRoutes = [];
+let currentPage = 1;
+const rowsPerPage = 10;
+let sortColumn = null;
+let sortDirection = 1;
+let currentEditingLine = null; // Ligne en cours d'édition
 
 // ===== FONCTIONS UTILITAIRES =====
 /**
- * Trie les cotations par difficulté (4a < 5b < 6c+ < 7a, etc.)
+ * Trie les cotations par difficulté
  */
 function sortGrades(grades) {
     const gradeOrder = [
         "4a", "4b", "4c",
-        "5a", "5b", "5c",
+        "5a", "5a+", "5b", "5b+", "5c", "5c+",
         "6a", "6a+", "6b", "6b+", "6c", "6c+",
         "7a", "7a+", "7b", "7b+", "7c", "7c+",
         "8a", "8a+", "8b", "8b+", "8c", "8c+"
     ];
-    return grades.sort((a, b) => {
-        const indexA = gradeOrder.indexOf(a.toLowerCase());
-        const indexB = gradeOrder.indexOf(b.toLowerCase());
-        return indexA - indexB;
-    });
+    return grades.sort((a, b) => gradeOrder.indexOf(a.toLowerCase()) - gradeOrder.indexOf(b.toLowerCase()));
 }
 
 /**
@@ -43,10 +43,9 @@ function getColorCode(color) {
         "Bleu": "#4ECDC4",
         "Vert": "#6BCB77",
         "Violet": "#B19CD9",
+        "Rose": "#FF9FF3",
         "Noir": "#333333",
-        "Rose": "#FF69B4",
-        "Gris": "#A9A9A9",
-        "Marron": "#8B4513"
+        "Marron": "#A0522D"
     };
     return colorMap[color] || "#CCCCCC";
 }
@@ -73,7 +72,6 @@ async function loadData() {
         const csvText = await response.text();
         const rows = csvText.split('\n').slice(1); // Ignorer l'en-tête
 
-        // Parser et filtrer les données
         routes = rows
             .map(row => {
                 const values = row.split(/,(?=(?:(?:[^"]*"[^"]*")*[^"]*$))/);
@@ -89,18 +87,13 @@ async function loadData() {
                     notes: values[8]?.replace(/"/g, '').trim() || ""
                 };
             })
-            .filter(route => {
-                // Garder seulement les lignes valides
-                return route.line > 0 &&
-                       route.grade &&
-                       !["inconnu", "false", ""].includes(route.grade.toLowerCase());
-            });
+            .filter(route => route.line > 0 && !["inconnu", "false", ""].includes(route.grade.toLowerCase()));
 
         filteredRoutes = [...routes];
         updateDashboard();
     } catch (error) {
         console.error("Erreur de chargement :", error);
-        alert("Erreur de chargement des données. Vérifie la console.");
+        alert("Erreur de chargement des données.");
     }
 }
 
@@ -116,11 +109,11 @@ function updateDashboard() {
 }
 
 /**
- * Met à jour les indicateurs clés (KPI)completed
+ * Met à jour les KPI
  */
 function updateKPIs() {
     const totalRoutes = filteredRoutes.length;
-    const completedRoutes = filteredRoutes.filter(r => r.status === 'Terminé').length;
+    const completedRoutes = filteredRoutes.filter(r => r.status === 'À ouvrir').length;
     const inProgressRoutes = filteredRoutes.filter(r => r.status === 'En cours').length;
     const toOpenRoutes = filteredRoutes.filter(r => r.status === 'À ouvrir').length;
 
@@ -131,28 +124,18 @@ function updateKPIs() {
 }
 
 /**
- * Met à jour le tableau des voies
- */
-// Variables globales pour la pagination
-let currentPage = 1;
-const rowsPerPage = 10;
-let sortedRoutes = [];
-let sortColumn = null;
-let sortDirection = 1; // 1 = croissant, -1 = décroissant
-
-/**
- * Met à jour le tableau des voies avec pagination et tri
+ * Met à jour le tableau des voies (UNIQUEMENT avec bouton Modifier)
  */
 function updateRoutesTable() {
     // Appliquer le tri si une colonne est sélectionnée
     if (sortColumn !== null) {
         sortedRoutes = [...filteredRoutes].sort((a, b) => {
-            let valA = a[Object.keys(a)[sortColumn]];
-            let valB = b[Object.keys(a)[sortColumn]];
+            const keys = Object.keys(a);
+            let valA = a[keys[sortColumn]];
+            let valB = b[keys[sortColumn]];
 
-            // Gestion des cas particuliers (ex: statuts, couleurs)
             if (sortColumn === 7) { // Statut
-                const statusOrder = { 'to_open': 1, 'in_progress': 2, 'completed': 3 };
+                const statusOrder = { 'À ouvrir': 1, 'En cours': 2, 'Complété': 3 };
                 return (statusOrder[valA] - statusOrder[valB]) * sortDirection;
             } else if (typeof valA === 'string') {
                 return valA.localeCompare(valB) * sortDirection;
@@ -168,10 +151,10 @@ function updateRoutesTable() {
     const startIndex = (currentPage - 1) * rowsPerPage;
     const paginatedRoutes = sortedRoutes.slice(startIndex, startIndex + rowsPerPage);
 
-    // Générer le tableau
+    // Générer le tableau SANS édition directe (UNIQUEMENT bouton Modifier)
     const tableBody = document.getElementById('routesTableBody');
     tableBody.innerHTML = paginatedRoutes.map(route => `
-        <tr>
+        <tr data-line="${route.line}">
             <td>${route.line}</td>
             <td>Zone ${route.zone}</td>
             <td>${route.grade}</td>
@@ -185,13 +168,93 @@ function updateRoutesTable() {
             <td class="status-${route.status}">${translateStatus(route.status)}</td>
             <td>${route.notes}</td>
             <td>
-                <button onclick="editRoute(${route.line})"><i class="fas fa-edit"></i></button>
+                <button onclick="openEditModal(${route.line})" class="edit-btn" title="Modifier cette voie">
+                    <i class="fas fa-edit"></i>
+                </button>
             </td>
         </tr>
     `).join('');
 
-    // Mettre à jour la pagination
     updatePagination();
+}
+
+/**
+ * Ouvre la modale d'édition pour une voie (UNIQUE moyen de modification)
+ * @param {number} line - Numéro de ligne de la voie
+ */
+function openEditModal(line) {
+    const route = routes.find(r => r.line === line);
+    if (!route) return;
+
+    currentEditingLine = line;
+
+    // Remplir la modale avec les données de la voie
+    document.getElementById('editModalTitle').textContent = `Éditer la voie : ${route.grade} ${route.color} (Ligne ${line})`;
+    document.getElementById('editLine').value = route.line;
+    document.getElementById('editZone').value = route.zone;
+    document.getElementById('editGrade').value = route.grade;
+    document.getElementById('editColor').value = route.color;
+    document.getElementById('editHolds').value = route.holds;
+    document.getElementById('editType').value = route.type;
+    document.getElementById('editOpener').value = route.opener;
+    document.getElementById('editStatus').value = route.status;
+    document.getElementById('editNotes').value = route.notes;
+
+    // Afficher la modale
+    document.getElementById('editRouteModal').style.display = 'block';
+}
+
+/**
+ * Ferme la modale d'édition
+ */
+function closeEditModal() {
+    document.getElementById('editRouteModal').style.display = 'none';
+    currentEditingLine = null;
+}
+
+/**
+ * Sauvegarde les modifications de la voie
+ */
+async function saveEditedRoute(event) {
+    event.preventDefault();
+
+    const line = currentEditingLine;
+    const routeIndex = routes.findIndex(r => r.line === line);
+    if (routeIndex === -1) return;
+
+    // Mettre à jour les données
+    routes[routeIndex] = {
+        ...routes[routeIndex],
+        line: parseInt(document.getElementById('editLine').value),
+        zone: parseInt(document.getElementById('editZone').value),
+        grade: document.getElementById('editGrade').value,
+        color: document.getElementById('editColor').value,
+        holds: parseInt(document.getElementById('editHolds').value),
+        type: document.getElementById('editType').value,
+        opener: document.getElementById('editOpener').value,
+        status: document.getElementById('editStatus').value,
+        notes: document.getElementById('editNotes').value
+    };
+
+    // Mettre à jour le Google Sheet
+    try {
+        await fetch(API_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                ...routes[routeIndex],
+                secret: SECRET_KEY
+            })
+        });
+
+        // Rafraîchir les données
+        filterRoutes();
+        closeEditModal();
+    } catch (error) {
+        console.error("Erreur lors de la mise à jour :", error);
+        alert("Erreur lors de la mise à jour. Vérifie la console.");
+    }
 }
 
 /**
@@ -228,17 +291,15 @@ function nextPage() {
 
 /**
  * Trie le tableau par colonne
- * @param {number} columnIndex - Index de la colonne
  */
 function sortTable(columnIndex) {
     if (sortColumn === columnIndex) {
-        sortDirection *= -1; // Inverse le sens du tri
+        sortDirection *= -1;
     } else {
         sortColumn = columnIndex;
         sortDirection = 1;
     }
 
-    // Mettre à jour les icônes de tri
     document.querySelectorAll('.routes-table th i').forEach((icon, index) => {
         icon.className = 'fas fa-sort';
         if (index === columnIndex) {
@@ -250,10 +311,10 @@ function sortTable(columnIndex) {
 }
 
 /**
- * Filtre les voies selon les critères
+ * Filtre les voies
  */
 function filterRoutes() {
-    currentPage = 1; // Réinitialiser la pagination
+    currentPage = 1;
     const zoneFilter = document.getElementById('zoneFilter').value;
     const statusFilter = document.getElementById('statusFilter').value;
     const gradeFilter = document.getElementById('gradeFilter').value;
@@ -295,10 +356,63 @@ function searchRoutes() {
     updateRoutesTable();
 }
 
+// ===== GESTION DE LA MODALE D'AJOUT =====
+/**
+ * Ouvre la modale pour ajouter une voie
+ */
+function addRoute() {
+    document.getElementById('modalTitle').textContent = "Ajouter une voie";
+    document.getElementById('routeForm').reset();
+    document.getElementById('routeHolds').value = 27;
+    document.getElementById('routeOpener').value = "Me";
+    document.getElementById('routeModal').style.display = 'block';
+}
+
+/**
+ * Ferme la modale d'ajout
+ */
+function closeModal() {
+    document.getElementById('routeModal').style.display = 'none';
+}
+
+/**
+ * Sauvegarde une nouvelle voie
+ */
+async function saveRoute(event) {
+    event.preventDefault();
+
+    const newRoute = {
+        line: parseInt(document.getElementById('routeLine').value),
+        zone: parseInt(document.getElementById('routeZone').value),
+        grade: document.getElementById('routeGrade').value,
+        color: document.getElementById('routeColor').value,
+        holds: parseInt(document.getElementById('routeHolds').value),
+        type: document.getElementById('routeType').value,
+        opener: document.getElementById('routeOpener').value,
+        status: document.getElementById('routeStatus').value,
+        notes: document.getElementById('routeNotes').value,
+        secret: SECRET_KEY
+    };
+
+    try {
+        await fetch(API_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(newRoute)
+        });
+
+        setTimeout(loadData, 1000);
+        closeModal();
+    } catch (error) {
+        console.error("Erreur :", error);
+        alert("Erreur lors de la sauvegarde.");
+    }
+}
 
 // ===== GESTION DES GRAPHIQUES =====
 /**
- * Initialise tous les graphiques
+ * Initialise les graphiques
  */
 function initCharts() {
     // Graphique par cotation
@@ -311,7 +425,7 @@ function initCharts() {
 
     const gradeCtx = document.getElementById('gradeChart');
     if (gradeCtx) {
-        new Chart(gradeCtx, {
+        window.gradeChart = new Chart(gradeCtx, {
             type: 'bar',
             plugins: [ChartDataLabels],
             data: {
@@ -331,7 +445,7 @@ function initCharts() {
                     borderWidth: 1,
                     borderRadius: 4,
                     borderSkipped: false,
-                    barPercentage: 0.6,
+                    barPercentage: 0.7,
                     categoryPercentage: 0.8
                 }]
             },
@@ -358,7 +472,7 @@ function initCharts() {
                     y: {
                         beginAtZero: true,
                         grid: { color: 'rgba(0, 0, 0, 0.05)', borderDash: [2, 2] },
-                        ticks: { stepSize: 1, padding: 25, margin: 10 }
+                        ticks: { stepSize: 1, padding: 8 }
                     },
                     x: {
                         grid: { display: false },
@@ -369,11 +483,11 @@ function initCharts() {
         });
     }
 
+    // Graphique par zone (barres groupées par statut)
     const zoneCtx = document.getElementById('zoneChart');
     if (zoneCtx) {
-        // Zones fixes de 1 à 6
-        const uniqueZones = [1, 2, 3, 4, 5, 6];
-        const statuses = ['Terminé', 'En cours', 'À ouvrir']; // Statuts en français
+        const uniqueZones = [...new Set(filteredRoutes.map(r => r.zone))].sort((a, b) => a - b);
+        const statuses = ['À ouvrir', 'En cours', 'Terminé'];
         const statusLabels = {
             'Terminé': 'Terminé',
             'En cours': 'En cours',
@@ -403,8 +517,7 @@ function initCharts() {
             };
         });
 
-        // Créer le graphique avec barres groupées
-        new Chart(zoneCtx, {
+        window.zoneChart = new Chart(zoneCtx, {
             type: 'bar',
             data: {
                 labels: uniqueZones.map(z => `Zone ${z}`),
@@ -414,29 +527,11 @@ function initCharts() {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: {
-                        position: 'bottom',
-                        align: 'center',
-                        labels: {
-                            usePointStyle: true,
-                            pointStyle: 'circle',
-                            padding: 20,
-                            font: {
-                                size: 13,
-                                weight: 'bold',
-                                family: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif"
-                            }
-                        }
-                    },
+                    legend: { position: 'bottom' },
                     tooltip: {
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                        titleFont: { size: 14 },
-                        bodyFont: { size: 13 },
-                        padding: 20,
-                        cornerRadius: 6,
                         callbacks: {
                             label: function(context) {
-                                return `${context.dataset.label}: ${context.raw} voies`;
+                                return `${context.dataset.label}: ${context.raw}`;
                             }
                         }
                     },
@@ -453,13 +548,8 @@ function initCharts() {
                     }
                 },
                 scales: {
-                    x: {
-                        grid: { display: true, color: 'rgba(0, 0, 0, 0.5)', drawBorder: false, },
-                        ticks: {
-                            font: { weight: 'bold' },
-                            color: '#666'
-                        }
-                    },
+                    x: { grid: { display: true , color: 'rgba(0, 0, 0, 0.5)' } 
+                },
                     y: {
                         beginAtZero: true,
                         grid: { 
@@ -483,7 +573,6 @@ function initCharts() {
         });
     }
 
-
     // Graphique par couleur
     const colorCtx = document.getElementById('colorChart');
     if (colorCtx) {
@@ -493,7 +582,7 @@ function initCharts() {
         );
         const colorBackgrounds = colors.map(color => getColorCode(color));
 
-        new Chart(colorCtx, {
+        window.colorChart = new Chart(colorCtx, {
             type: 'doughnut',
             data: {
                 labels: colors,
@@ -531,59 +620,164 @@ function initCharts() {
     }
 }
 
-// ===== GESTION DE LA MODALE =====
+// ===== GESTION DU SCHÉMA DU MUR =====
 /**
- * Ouvre la modale pour ajouter/éditer une voie
+ * Initialise le schéma du mur avec les zones cliquables
  */
-function addRoute() {
-    document.getElementById('modalTitle').textContent = "Ajouter une voie";
-    document.getElementById('routeForm').reset();
-    document.getElementById('routeHolds').value = 27;
-    document.getElementById('routeOpener').value = "Me";
-    document.getElementById('routeModal').style.display = 'block';
-}
+function initWallSchema() {
+    const wallImage = document.getElementById('wallImage');
+    if (!wallImage) return;
 
-/**
- * Ferme la modale
- */
-function closeModal() {
-    document.getElementById('routeModal').style.display = 'none';
-}
+    // Attendre que l'image soit chargée
+    wallImage.onload = function() {
+        // Définir les zones cliquables (coordonnées approximatives à ajuster)
+        const zones = [
+            { id: 1, name: "Zone 1", coords: "0,0,200,300", color: "#FFD700" },
+            { id: 2, name: "Zone 2", coords: "200,0,400,300", color: "#FF6B6B" },
+            { id: 3, name: "Zone 3", coords: "400,0,600,300", color: "#4ECDC4" },
+            { id: 4, name: "Zone 4", coords: "600,0,800,300", color: "#6BCB77" },
+            { id: 5, name: "Zone 5", coords: "800,0,1000,300", color: "#B19CD9" }
+        ];
 
-/**
- * Sauvegarde une voie (via Apps Script)
- */
-async function saveRoute(event) {
-    event.preventDefault();
+        const map = document.getElementById('wallmap');
 
-    const newRoute = {
-        line: parseInt(document.getElementById('routeLine').value),
-        zone: parseInt(document.getElementById('routeZone').value),
-        grade: document.getElementById('routeGrade').value,
-        color: document.getElementById('routeColor').value,
-        holds: parseInt(document.getElementById('routeHolds').value),
-        type: document.getElementById('routeType').value,
-        opener: document.getElementById('routeOpener').value,
-        status: document.getElementById('routeStatus').value,
-        notes: document.getElementById('routeNotes').value,
-        secret: SECRET_KEY
-    };
-
-    try {
-        await fetch(API_URL, {
-            method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(newRoute)
+        // Créer les zones cliquables
+        zones.forEach(zone => {
+            const area = document.createElement('area');
+            area.setAttribute('shape', 'rect');
+            area.setAttribute('coords', zone.coords);
+            area.setAttribute('href', '#');
+            area.setAttribute('data-zone-id', zone.id);
+            area.setAttribute('data-zone-name', zone.name);
+            area.setAttribute('data-zone-color', zone.color);
+            area.addEventListener('click', function(e) {
+                e.preventDefault();
+                showZoneRoutes(zone.id);
+            });
+            map.appendChild(area);
         });
 
-        setTimeout(loadData, 1000);
-        closeModal();
-    } catch (error) {
-        console.error("Erreur :", error);
-        alert("Erreur lors de la sauvegarde. Vérifie la console.");
+        // Afficher toutes les voies au chargement
+        showAllRoutes();
+    };
+
+    // Si l'image est déjà chargée
+    if (wallImage.complete) {
+        wallImage.onload();
     }
 }
+
+/**
+ * Affiche les voies d'une zone spécifique
+ * @param {number} zoneId - ID de la zone
+ */
+function showZoneRoutes(zoneId) {
+    // Masquer toutes les voies
+    document.querySelectorAll('.route-path, .hold').forEach(el => el.remove());
+
+    // Filtrer les voies de la zone sélectionnée
+    const zoneRoutes = filteredRoutes.filter(route => route.zone == zoneId);
+
+    // Afficher les informations de la zone
+    const zone = document.querySelector(`area[data-zone-id="${zoneId}"]`);
+    if (zone) {
+        document.getElementById('routeInfoTitle').textContent =
+            `Voies de la ${zone.getAttribute('data-zone-name')}`;
+        document.getElementById('routeInfoContent').innerHTML =
+            zoneRoutes.length > 0 ?
+            `<ul>${zoneRoutes.map(route =>
+                `<li>
+                    <strong>Ligne ${route.line}:</strong> ${route.grade} (${translateStatus(route.status)})
+                    <div class="color-box" style="background-color: ${getColorCode(route.color)};"></div>
+                </li>`
+            ).join('')}</ul>` :
+            `<p>Aucune voie dans cette zone</p>`;
+    }
+
+    // Mettre en évidence la zone sélectionnée
+    document.querySelectorAll('area').forEach(area => {
+        area.classList.remove('active');
+    });
+    if (zone) zone.classList.add('active');
+
+    // Dessiner les voies sur le schéma (simplifié - à adapter avec tes données réelles)
+    drawRoutesOnSchema(zoneRoutes);
+}
+
+/**
+ * Dessine les voies sur le schéma
+ * @param {Array} routes - Liste des voies à dessiner
+ */
+function drawRoutesOnSchema(routes) {
+    const schema = document.querySelector('.wall-schema');
+    if (!schema) return;
+
+    routes.forEach(route => {
+        // Exemple simplifié - à adapter avec tes coordonnées réelles
+        // Ici on génère des positions aléatoires pour la démo
+        const x1 = Math.random() * 80 + (route.zone - 1) * 150;
+        const y1 = Math.random() * 200 + 50;
+        const x2 = x1 + Math.random() * 30 - 15;
+        const y2 = y1 + Math.random() * 50 + 20;
+
+        // Créer un chemin pour la voie
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute('class', 'route-path');
+        path.setAttribute('d', `M${x1},${y1} L${x2},${y2}`);
+        path.setAttribute('stroke', getColorCode(route.color));
+        path.setAttribute('stroke-width', '2');
+        path.setAttribute('fill', 'none');
+        schema.appendChild(path);
+
+        // Ajouter des prises (simplifié)
+        for (let i = 0; i < 3; i++) {
+            const hold = document.createElement('div');
+            hold.className = 'hold';
+            hold.style.left = `${x1 + (x2 - x1) * (i/2)}px`;
+            hold.style.top = `${y1 + (y2 - y1) * (i/2)}px`;
+            hold.style.backgroundColor = getColorCode(route.color);
+            schema.appendChild(hold);
+        }
+    });
+}
+
+/**
+ * Affiche toutes les voies sur le schéma
+ */
+function showAllRoutes() {
+    document.getElementById('routeInfoTitle').textContent = "Toutes les voies";
+    document.getElementById('routeInfoContent').innerHTML =
+        filteredRoutes.length > 0 ?
+        `<ul>${filteredRoutes.map(route =>
+            `<li>
+                <strong>Ligne ${route.line} (Zone ${route.zone}):</strong> ${route.grade}
+                <div class="color-box" style="background-color: ${getColorCode(route.color)};"></div>
+            </li>`
+        ).join('')}</ul>` :
+        `<p>Aucune voie disponible</p>`;
+
+    drawRoutesOnSchema(filteredRoutes);
+}
+
+/**
+ * Masque toutes les voies sur le schéma
+ */
+function hideAllRoutes() {
+    document.querySelectorAll('.route-path, .hold').forEach(el => el.remove());
+    document.getElementById('routeInfoTitle').textContent = "Aucune voie affichée";
+    document.getElementById('routeInfoContent').innerHTML = "<p>Toutes les voies sont masquées</p>";
+}
+
+// ===== ÉVÉNEMENTS POUR LE SCHÉMA =====
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialiser le schéma du mur
+    initWallSchema();
+
+    // Boutons de contrôle
+    document.getElementById('showAllRoutes').addEventListener('click', showAllRoutes);
+    document.getElementById('hideAllRoutes').addEventListener('click', hideAllRoutes);
+});
+
 
 // ===== INITIALISATION =====
 // Bouton "Retour en haut"
