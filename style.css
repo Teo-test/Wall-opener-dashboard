@@ -78,29 +78,39 @@ header h1 {
 /* ===== GRAPHIQUES ===== */
 .charts-section {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Responsive */
     gap: 20px;
     margin-bottom: 20px;
 }
 
 .chart-container {
     background: white;
-    border-radius: var(--border-radius);
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     padding: 15px;
-    box-shadow: var(--box-shadow);
-    height: 450px;
 }
 
-.grade-chart .chart-container {
-    height: 450px;
+.chart-wrapper {
+    position: relative;
+    width: 100%;
+    height: 300px; /* Hauteur par défaut */
 }
 
-.grade-chart-title {
-    text-align: center;
-    margin-bottom: 15px;
-    font-weight: 600;
-    color: var(--dark-color);
+/* Hauteurs spécifiques */
+.grade-chart .chart-wrapper { height: 350px; }
+.zone-chart .chart-wrapper { height: 350px; }
+.color-chart .chart-wrapper { height: 300px; }
+
+/* Responsive */
+@media (max-width: 767px) {
+    .charts-section {
+        grid-template-columns: 1fr; /* Une colonne sur mobile */
+    }
+    .chart-wrapper {
+        height: 250px; /* Hauteur réduite */
+    }
 }
+
 
 /* ===== TABLEAU DES VOIES ===== */
 .routes-table-container {

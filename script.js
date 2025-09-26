@@ -229,7 +229,7 @@ function initCharts() {
                     y: {
                         beginAtZero: true,
                         grid: { color: 'rgba(0, 0, 0, 0.05)', borderDash: [2, 2] },
-                        ticks: { stepSize: 1, padding: 8 }
+                        ticks: { stepSize: 1, padding: 25, margin: 10 }
                     },
                     x: {
                         grid: { display: false },
@@ -286,7 +286,16 @@ function initCharts() {
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        position: 'top',
+                        position: 'bottom',
+                        align: 'start',
+                        labels: {
+                            boxWidth: 12,
+                            padding: 20,
+                            font: {
+                                size: 12,
+                                weight: 'bold' // Texte en gras
+                            }
+                        }
                     },
                     tooltip: {
                         callbacks: {
@@ -311,7 +320,7 @@ function initCharts() {
                     y: {
                         beginAtZero: true,
                         grid: { color: 'rgba(0, 0, 0, 0.05)' },
-                        ticks: { stepSize: 1 }
+                        ticks: { stepSize: 1 },
                     }
                 }
             },

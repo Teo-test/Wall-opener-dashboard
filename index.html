@@ -59,19 +59,31 @@
 
             <!-- Section des graphiques -->
             <section class="charts-section">
+                <!-- Graphique par cotation -->
                 <div class="chart-container grade-chart">
-                    <h3 class="grade-chart-title">Répartition par Cotation</h3>
-                    <canvas id="gradeChart"></canvas>
+                    <h3 class="chart-title">Répartition par Cotation</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="gradeChart"></canvas>
+                    </div>
                 </div>
-                <div class="chart-container">
-                    <h3>Répartition par Zone</h3>
-                    <canvas id="zoneChart"></canvas>
+
+                <!-- Graphique par zone -->
+                <div class="chart-container zone-chart">
+                    <h3 class="chart-title">Répartition par Zone</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="zoneChart"></canvas>
+                    </div>
                 </div>
-                <div class="chart-container">
-                    <h3>Répartition par Couleur</h3>
-                    <canvas id="colorChart"></canvas>
+
+                <!-- Graphique par couleur -->
+                <div class="chart-container color-chart">
+                    <h3 class="chart-title">Répartition par Couleur</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="colorChart"></canvas>
+                    </div>
                 </div>
             </section>
+
 
             <!-- Section de gestion des voies -->
             <section class="routes-section">
