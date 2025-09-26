@@ -247,16 +247,16 @@ if (zoneCtx) {
     // 1. Récupérer les zones UNIQUES présentes dans filteredRoutes
     // const uniqueZones = [...new Set(filteredRoutes.map(r => r.zone))].sort((a, b) => a - b);
     const uniqueZones = [1, 2, 3, 4, 5, 6]; // Zones fixes de 1 à 6
-    const statuses = ['completed', 'in_progress', 'to_open'];
+    const statuses = ['Terminé', 'En cours', 'À ouvrir'];
     const statusLabels = {
-        'completed': 'Terminé',
-        'in_progress': 'En cours',
-        'to_open': 'À ouvrir'
+        'Terminé': 'Terminé',
+        'En cours': 'En cours',
+        'À ouvrir': 'À ouvrir'
     };
     const statusColors = {
-        'completed': '#28a745',
-        'in_progress': '#ffc107',
-        'to_open': '#6c757d'
+        'Terminé': '#28a745',
+        'En cours': '#ffc107',
+        'À ouvrir': '#6c757d'
     };
 
     // 2. Préparer les données pour chaque statut et zone
