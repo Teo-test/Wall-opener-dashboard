@@ -396,6 +396,7 @@ header h1 {
     .charts-section {
         grid-template-columns: 1fr;
         gap: 15px;
+        width: 95%;
     }
 
     .chart-container {
