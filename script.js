@@ -465,7 +465,8 @@ function initCharts() {
                         align: 'top',
                         formatter: (value) => value > 0 ? value : '',
                         color: '#333',
-                        font: { weight: 'bold' }
+                        font: { weight: 'bold' },
+                        offset: -5
                     }
                 },
                 scales: {
@@ -632,11 +633,11 @@ function initWallSchema() {
     wallImage.onload = function() {
         // Définir les zones cliquables (coordonnées approximatives à ajuster)
         const zones = [
-            { id: 1, name: "Zone 1", coords: "0,0,200,300", color: "#FFD700" },
-            { id: 2, name: "Zone 2", coords: "200,0,400,300", color: "#FF6B6B" },
-            { id: 3, name: "Zone 3", coords: "400,0,600,300", color: "#4ECDC4" },
-            { id: 4, name: "Zone 4", coords: "600,0,800,300", color: "#6BCB77" },
-            { id: 5, name: "Zone 5", coords: "800,0,1000,300", color: "#B19CD9" }
+            { id: 1, name: "Zone 1", coords: "0,0,150,200", color: "#FFD700" },
+            { id: 2, name: "Zone 2", coords: "200,0,350,200", color: "#FF6B6B" },
+            { id: 3, name: "Zone 3", coords: "400,0,550,200", color: "#4ECDC4" },
+            { id: 4, name: "Zone 4", coords: "600,0,750,200", color: "#6BCB77" },
+            { id: 5, name: "Zone 5", coords: "800,0,950,200", color: "#B19CD9" }
         ];
 
         const map = document.getElementById('wallmap');
@@ -716,7 +717,7 @@ function drawRoutesOnSchema(routes) {
         // Exemple simplifié - à adapter avec tes coordonnées réelles
         // Ici on génère des positions aléatoires pour la démo
         const x1 = Math.random() * 80 + (route.zone - 1) * 150;
-        const y1 = Math.random() * 200 + 50;
+        const y1 = Math.random() * 200;
         const x2 = x1 + Math.random() * 30 - 15;
         const y2 = y1 + Math.random() * 50 + 20;
 
