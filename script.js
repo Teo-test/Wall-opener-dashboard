@@ -40,7 +40,7 @@ function getColorCode(color) {
         "Rouge": "#FF6B6B",
         "Blanc": "#f0f0f0",
         "Orange": "#FFA500",
-        "Bleu": "#4ECDC4",
+        "Bleu": "#1E90FF",
         "Vert": "#6BCB77",
         "Violet": "#B19CD9",
         "Rose": "#FF9FF3",
@@ -622,51 +622,280 @@ function initCharts() {
 }
 
 // ===== GESTION DU SCHÉMA DU MUR =====
+// /**
+//  * Initialise le schéma du mur avec les zones cliquables
+//  */
+// function initWallSchema() {
+//     const wallImage = document.getElementById('wallImage');
+//     if (!wallImage) return;
+
+//     // Attendre que l'image soit chargée
+//     wallImage.onload = function() {
+//         // Définir les zones cliquables (coordonnées approximatives à ajuster)
+//         const zones = [
+//             { id: 1, name: "Zone 1", coords: "25,400,122,400,126,148,110,120,18,138", color: "#FFD700" },
+//             { id: 2, name: "Zone 2", coords: "122,400,126,148,140,172,145,172,171,140,172,400", color: "#FF6B6B" },
+//             { id: 3, name: "Zone 3", coords: "172,400,170,129,267,45,334,111,333,400", color: "#1E90FF" },
+//             { id: 4, name: "Zone 4", coords: "333,400,334,113,388,164,407,146,410,400", color: "#6BCB77" },
+//             { id: 5, name: "Zone 5", coords: "410,400,408,139,420,108,480,135,478,400", color: "#B19CD9" }
+//         ];
+
+//         const map = document.getElementById('wallmap');
+
+//         // Créer les zones cliquables
+//         zones.forEach(zone => {
+//             const area = document.createElement('area');
+//             area.setAttribute('shape', 'poly');
+//             area.setAttribute('coords', zone.coords);
+//             area.setAttribute('href', '#');
+//             area.setAttribute('data-zone-id', zone.id);
+//             area.setAttribute('data-zone-name', zone.name);
+//             area.setAttribute('data-zone-color', zone.color);
+//             area.addEventListener('click', function(e) {
+//                 e.preventDefault();
+//                 showZoneRoutes(zone.id);
+//             });
+//             map.appendChild(area);
+//         });
+
+//         // Afficher toutes les voies au chargement
+//         showAllRoutes();
+//     };
+
+//     // Si l'image est déjà chargée
+//     if (wallImage.complete) {
+//         wallImage.onload();
+//     }
+// }
+
+// /**
+//  * Dessine les voies sur le schéma
+//  * @param {Array} routes - Liste des voies à dessiner
+//  */
+// function drawRoutesOnSchema(routes) {
+//     const schema = document.querySelector('.wall-schema');
+//     if (!schema) return;
+
+//     routes.forEach(route => {
+//         // Exemple simplifié - à adapter avec tes coordonnées réelles
+//         // Ici on génère des positions aléatoires pour la démo
+//         const x1 = Math.random() * 80 + (route.zone - 1) * 150;
+//         const y1 = Math.random() * 200;
+//         const x2 = x1 + Math.random() * 30 - 15;
+//         const y2 = y1 + Math.random() * 50;
+
+//         // Créer un chemin pour la voie
+//         const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+//         path.setAttribute('class', 'route-path');
+//         path.setAttribute('d', `M${x1},${y1} L${x2},${y2}`);
+//         path.setAttribute('stroke', getColorCode(route.color));
+//         path.setAttribute('stroke-width', '2');
+//         path.setAttribute('fill', 'none');
+//         schema.appendChild(path);
+
+//         // Ajouter des prises (simplifié)
+//         for (let i = 0; i < 3; i++) {
+//             const hold = document.createElement('div');
+//             hold.className = 'hold';
+//             hold.style.left = `${x1 + (x2 - x1) * (i/2)}px`;
+//             hold.style.top = `${y1 + (y2 - y1) * (i/2) + 200}px`;
+//             hold.style.backgroundColor = getColorCode(route.color);
+//             schema.appendChild(hold);
+//         }
+//     });
+// }
+
 /**
- * Initialise le schéma du mur avec les zones cliquables
+ * Initialise le schéma du mur avec les zones cliquables et sous-couches colorées
  */
 function initWallSchema() {
-    const wallImage = document.getElementById('wallImage');
-    if (!wallImage) return;
+    const svgOverlay = document.querySelector('.wall-overlay');
+    if (!svgOverlay) return;
 
-    // Attendre que l'image soit chargée
-    wallImage.onload = function() {
-        // Définir les zones cliquables (coordonnées approximatives à ajuster)
-        const zones = [
-            { id: 1, name: "Zone 1", coords: "0,0,150,200", color: "#FFD700" },
-            { id: 2, name: "Zone 2", coords: "200,0,350,200", color: "#FF6B6B" },
-            { id: 3, name: "Zone 3", coords: "400,0,550,200", color: "#4ECDC4" },
-            { id: 4, name: "Zone 4", coords: "600,0,750,200", color: "#6BCB77" },
-            { id: 5, name: "Zone 5", coords: "800,0,950,200", color: "#B19CD9" }
-        ];
+    // Zones avec leurs chemins SVG
+    const zones = [
+        {
+            id: 1,
+            name: "Zone 1",
+            color: "#FFD700",
+            path: "M35,400 L250,400 L250,80 L220,35 L35,70 Z"
+        },
+        {
+            id: 2,
+            name: "Zone 2",
+            color: "#FF6B6B",
+            path: "M250,400 L250,80 L280,140 L290,135 L340,70 L340,400 Z"
+        },
+        {
+            id: 3,
+            name: "Zone 3",
+            color: "#1E90FF",
+            path: "M340,400 L340,70 L400,0 L530,-110 L660,20 L660,400 Z"
+        },
+        {
+            id: 4,
+            name: "Zone 4",
+            color: "#6BCB77",
+            path: "M660,400 L660,20 L770,140 L820,70 L820,400 Z"
+        },
+        {
+            id: 5,
+            name: "Zone 5",
+            color: "#B19CD9",
+            path: "M820,400 L820,70 L840,15 L880,50 L960,60 L950,150 L950,400 Z"
+        }
+    ];
 
-        const map = document.getElementById('wallmap');
-
-        // Créer les zones cliquables
-        zones.forEach(zone => {
-            const area = document.createElement('area');
-            area.setAttribute('shape', 'rect');
-            area.setAttribute('coords', zone.coords);
-            area.setAttribute('href', '#');
-            area.setAttribute('data-zone-id', zone.id);
-            area.setAttribute('data-zone-name', zone.name);
-            area.setAttribute('data-zone-color', zone.color);
-            area.addEventListener('click', function(e) {
-                e.preventDefault();
-                showZoneRoutes(zone.id);
-            });
-            map.appendChild(area);
+    // Créer les zones cliquables avec sous-couche colorée
+    zones.forEach(zone => {
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute('d', zone.path);
+        path.setAttribute('class', `zone-overlay zone-${zone.id}`);
+        path.setAttribute('data-zone-id', zone.id);
+        path.setAttribute('data-zone-name', zone.name);
+        path.setAttribute('data-zone-color', zone.color);
+        path.setAttribute('fill', `${zone.color}26`); // Opacité de 15% (26 en hexa)
+        path.setAttribute('stroke', `${zone.color}4D`); // Opacité de 30% (4D en hexa) pour la bordure
+        path.setAttribute('stroke-width', '1');
+        path.addEventListener('click', function(e) {
+            e.stopPropagation();
+            showZoneRoutes(zone.id);
         });
+        path.addEventListener('mouseover', function() {
+            this.setAttribute('fill', `${zone.color}33`); // Opacité de 20% au survol
+        });
+        path.addEventListener('mouseout', function() {
+            if (!this.classList.contains('active')) {
+                this.setAttribute('fill', `${zone.color}26`);
+            }
+        });
+        svgOverlay.appendChild(path);
+    });
 
-        // Afficher toutes les voies au chargement
-        showAllRoutes();
-    };
-
-    // Si l'image est déjà chargée
-    if (wallImage.complete) {
-        wallImage.onload();
-    }
+    // Afficher toutes les voies au chargement
+    showAllRoutes();
 }
+
+
+/**
+ * Affiche les voies d'une zone spécifique avec mise en évidence
+ * @param {number} zoneId - ID de la zone
+ */
+function showZoneRoutes(zoneId) {
+    // Masquer toutes les voies
+    document.querySelectorAll('.route-path, .hold').forEach(el => el.remove());
+
+    // Filtrer les voies de la zone sélectionnée
+    const zoneRoutes = filteredRoutes.filter(route => route.zone == zoneId);
+
+    // Mettre en évidence la zone sélectionnée
+    document.querySelectorAll('.zone-overlay').forEach(zone => {
+        zone.classList.remove('active');
+        if (parseInt(zone.getAttribute('data-zone-id')) === zoneId) {
+            zone.classList.add('active');
+        }
+    });
+
+    // Afficher les informations de la zone
+    const zone = document.querySelector(`.zone-overlay[data-zone-id="${zoneId}"]`);
+    if (zone) {
+        document.getElementById('routeInfoTitle').textContent =
+            `Voies de la ${zone.getAttribute('data-zone-name')}`;
+        document.getElementById('routeInfoContent').innerHTML =
+            zoneRoutes.length > 0 ?
+            `<ul>${zoneRoutes.map(route =>
+                `<li>
+                    <strong>Ligne ${route.line}:</strong> ${route.grade} (${translateStatus(route.status)})
+                    <div class="color-box" style="background-color: ${getColorCode(route.color)};"></div>
+                </li>`
+            ).join('')}</ul>` :
+            `<p>Aucune voie dans cette zone</p>`;
+    }
+
+    // Dessiner les voies sur le schéma
+    drawRoutesOnSchema(zoneRoutes);
+}
+
+/**
+ * Dessine les voies sur le schéma avec des coordonnées réalistes
+ * @param {Array} routes - Liste des voies à dessiner
+ */
+function drawRoutesOnSchema(routes) {
+    const svgOverlay = document.querySelector('.wall-overlay');
+    if (!svgOverlay) return;
+
+    // Effacer les voies précédentes
+    document.querySelectorAll('.route-path, .hold').forEach(el => el.remove());
+
+    routes.forEach(route => {
+        // Coordonnées EXEMPLES - À REMPLACER par tes données réelles
+        // Ces coordonnées doivent correspondre à ton schéma réel
+        const zoneCoord = {
+            1: { x: 50, y: 50 },
+            2: { x: 250, y: 50 },
+            3: { x: 450, y: 50 },
+            4: { x: 650, y: 50 },
+            5: { x: 850, y: 50 }
+        };
+
+        // Liste des coordonnées pour 24 lignes, x de 35 à 950, y à 400
+        // L'indice 0 correspond à la ligne 1, etc.
+        const lineCoord = {
+            1 : { x: 35, y: 400 },   // Ligne 1
+            2 : { x: 75, y: 400 },   // Ligne 2
+            3 : { x: 115, y: 400 },  // Ligne 3
+            4 : { x: 155, y: 400 },  // Ligne 4
+            5 : { x: 195, y: 400 },  // Ligne 5
+            6 : { x: 235, y: 400 },  // Ligne 6
+            7 : { x: 275, y: 400 },  // Ligne 7
+            8 : { x: 315, y: 400 },  // Ligne 8
+            9 : { x: 355, y: 400 },  // Ligne 9
+            10 : { x: 395, y: 400 },  // Ligne 10
+            11 : { x: 435, y: 400 },  // Ligne 11
+            12 : { x: 475, y: 400 },  // Ligne 12
+            13 : { x: 515, y: 400 },  // Ligne 13
+            14 : { x: 555, y: 400 },  // Ligne 14
+            15 : { x: 595, y: 400 },  // Ligne 15
+            16 : { x: 635, y: 400 },  // Ligne 16
+            17 : { x: 675, y: 400 },  // Ligne 17
+            18 : { x: 715, y: 400 },  // Ligne 18
+            19 : { x: 755, y: 400 },  // Ligne 19
+            20 : { x: 795, y: 400 },  // Ligne 20
+            21 : { x: 835, y: 400 },  // Ligne 21
+            22 : { x: 875, y: 400 },  // Ligne 22
+            23 : { x: 915, y: 400 },  // Ligne 23
+            24 : { x: 950, y: 400 }   // Ligne 24
+        };
+
+        const startZone = zoneCoord[route.zone];
+        if (!startZone) return;
+
+        // Exemple de trajet (à adapter avec tes données)
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute('class', 'route-path');
+        path.setAttribute('d', `
+            M${lineCoord[route.line].x},${lineCoord[route.line].y}
+            L${lineCoord[route.line].x},${lineCoord[route.line].y - 50}
+            L${lineCoord[route.line].x},${lineCoord[route.line].y - 100}
+            L${lineCoord[route.line].x},${lineCoord[route.line].y - 150}
+        `);
+        path.setAttribute('stroke', getColorCode(route.color));
+        path.setAttribute('stroke-width', '2');
+        svgOverlay.appendChild(path);
+
+        // Ajouter des prises (exemple)
+        for (let i = 0; i < 3; i++) {
+            const hold = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            hold.setAttribute('class', 'hold');
+            hold.setAttribute('cx', startZone.x + 30*i);
+            hold.setAttribute('cy', startZone.y + 50*i);
+            hold.setAttribute('r', '4');
+            hold.setAttribute('fill', getColorCode(route.color));
+            svgOverlay.appendChild(hold);
+        }
+    });
+}
+
 
 /**
  * Affiche les voies d'une zone spécifique
@@ -705,42 +934,7 @@ function showZoneRoutes(zoneId) {
     drawRoutesOnSchema(zoneRoutes);
 }
 
-/**
- * Dessine les voies sur le schéma
- * @param {Array} routes - Liste des voies à dessiner
- */
-function drawRoutesOnSchema(routes) {
-    const schema = document.querySelector('.wall-schema');
-    if (!schema) return;
 
-    routes.forEach(route => {
-        // Exemple simplifié - à adapter avec tes coordonnées réelles
-        // Ici on génère des positions aléatoires pour la démo
-        const x1 = Math.random() * 80 + (route.zone - 1) * 150;
-        const y1 = Math.random() * 200;
-        const x2 = x1 + Math.random() * 30 - 15;
-        const y2 = y1 + Math.random() * 50 + 20;
-
-        // Créer un chemin pour la voie
-        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        path.setAttribute('class', 'route-path');
-        path.setAttribute('d', `M${x1},${y1} L${x2},${y2}`);
-        path.setAttribute('stroke', getColorCode(route.color));
-        path.setAttribute('stroke-width', '2');
-        path.setAttribute('fill', 'none');
-        schema.appendChild(path);
-
-        // Ajouter des prises (simplifié)
-        for (let i = 0; i < 3; i++) {
-            const hold = document.createElement('div');
-            hold.className = 'hold';
-            hold.style.left = `${x1 + (x2 - x1) * (i/2)}px`;
-            hold.style.top = `${y1 + (y2 - y1) * (i/2)}px`;
-            hold.style.backgroundColor = getColorCode(route.color);
-            schema.appendChild(hold);
-        }
-    });
-}
 
 /**
  * Affiche toutes les voies sur le schéma

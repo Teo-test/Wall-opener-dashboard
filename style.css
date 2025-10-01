@@ -767,3 +767,68 @@ header h1 {
         height: 200px;
     }
 }
+
+/* Conteneur pour le SVG et l'image */
+.svg-container {
+    position: relative;
+    width: 100%;
+    height: 0;
+    padding-bottom: 30%; /* Ratio hauteur/largeur de ton image (ajuste si nécessaire) */
+    overflow: hidden;
+}
+
+.wall-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    z-index: 1;
+}
+
+.wall-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+}
+
+/* Style pour les zones du mur */
+.zone-overlay {
+    fill: rgba(255, 215, 0, 0.1);
+    stroke: rgba(255, 215, 0, 0.3);
+    stroke-width: 1;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.zone-overlay:hover {
+    fill-opacity: 0.2;
+}
+
+.zone-overlay.active {
+    fill-opacity: 0.3;
+    stroke-width: 1.5;
+}
+
+/* Style pour les zones spécifiques */
+.zone-1 { fill: rgba(255, 215, 0, 0.1); }   /* Jaune */
+.zone-2 { fill: rgba(255, 107, 107, 0.1); } /* Rouge */
+.zone-3 { fill: rgba(78, 205, 196, 0.1); } /* Turquoise */
+.zone-4 { fill: rgba(107, 203, 119, 0.1); } /* Vert */
+.zone-5 { fill: rgba(177, 156, 217, 0.1); } /* Violet */
+
+/* Style pour les voies */
+.route-path {
+    stroke-width: 2;
+    fill: none;
+    pointer-events: none;
+}
+
+.hold {
+    pointer-events: none;
+}
+
