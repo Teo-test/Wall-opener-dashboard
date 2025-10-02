@@ -136,7 +136,10 @@
                                 <th>Actions</th>
                             </tr>
                         </thead>
-                        <tbody id="routesTableBody"></tbody>
+                        <tbody id="routesTableBody">
+                            <!-- Les lignes du tableau seront ajoutées ici par JavaScript -->
+
+                        </tbody>
                     </table>
                 </div>
 
@@ -201,8 +204,9 @@
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="editLine">Ligne</label>
-                        <input type="number" id="editLine" min="1" max="36" required>
+                        <input type="number" id="editLine" min="1" max="24" required>
                     </div>
+                    <!-- Sélecteur de zone -->
                     <div class="form-group">
                         <label for="editZone">Zone</label>
                         <select id="editZone" required>
@@ -213,10 +217,12 @@
                             <option value="5">Zone 5</option>
                         </select>
                     </div>
+                    <!-- Sélecteur de cotation -->
                     <div class="form-group">
                         <label for="editGrade">Cotation</label>
                         <input type="text" id="editGrade" placeholder="Ex: 6a, 6c+" required>
                     </div>
+                    <!-- Sélecteur de couleur -->
                     <div class="form-group">
                         <label for="editColor">Couleur</label>
                         <select id="editColor" required>
@@ -232,13 +238,15 @@
                             <option value="Marron">Marron</option>
                         </select>
                     </div>
+                    <!-- Nombre de prises -->
                     <div class="form-group">
                         <label for="editHolds">Prises</label>
-                        <input type="number" id="editHolds" required>
+                        <input type="number" id="editHolds" min="0" placeholder="Nombre de prises" required>
                     </div>
+                    <!-- Sélecteur de type -->
                     <div class="form-group">
                         <label for="editType">Type</label>
-                        <select id="editType" required>
+                        <select id="editType">
                             <option value="Dalle">Dalle</option>
                             <option value="Technique">Technique</option>
                             <option value="Physique">Physique</option>
@@ -246,18 +254,21 @@
                             <option value="Dévers">Dévers</option>
                         </select>
                     </div>
+                    <!-- Sélecteur d'ouvreur -->
                     <div class="form-group">
                         <label for="editOpener">Ouvreur</label>
-                        <input type="text" id="editOpener" required>
+                        <input type="text" id="editOpener" placeholder="Nom de l'ouvreur">
                     </div>
+                    <!-- Sélecteur de statut -->
                     <div class="form-group">
                         <label for="editStatus">Statut</label>
                         <select id="editStatus" required>
-                            <option value="to_open">À ouvrir</option>
-                            <option value="in_progress">En cours</option>
-                            <option value="completed">Terminé</option>
+                            <option value="À ouvrir">À ouvrir</option>
+                            <option value="En cours">En cours</option>
+                            <option value="Terminé">Terminé</option>
                         </select>
                     </div>
+                    <!-- Zone de texte pour les notes -->
                     <div class="form-group full-width">
                         <label for="editNotes">Notes</label>
                         <textarea id="editNotes" rows="2" placeholder="Notes optionnelles..."></textarea>
@@ -265,7 +276,7 @@
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="btn-secondary" id="closeEditModal">Annuler</button>
-                    <button type="submit" class="btn-primary">Sauvegarder</button>
+                    <button type="button" class="btn-primary" id="saveEditModal">Sauvegarder</button>
                 </div>
             </form>
         </div>

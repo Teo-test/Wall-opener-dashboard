@@ -75,7 +75,7 @@ let currentPage = 1;
 const rowsPerPage = 10;
 let sortColumn = null;
 let sortDirection = 1;
-let currentEditingLine = null;
+let currentEditingLine;
 
 // ===== FONCTIONS UTILITAIRES =====
 function sortGrades(grades) {
@@ -103,6 +103,7 @@ async function loadData() {
         }
 
         routes = routesData.map(route => ({
+            id: route.id,
             line: route.nom,
             zone: route.zone,
             grade: route.grade || 'Non défini',
@@ -181,7 +182,7 @@ function updateRoutesTable() {
 
     const tableBody = document.getElementById('routesTableBody');
     tableBody.innerHTML = paginatedRoutes.map(route => `
-        <tr data-line="${route.line}">
+        <tr data-route-id="${route.id}">
             <td>${route.line}</td>
             <td>Zone ${route.zone}</td>
             <td>${route.grade}</td>
@@ -192,10 +193,10 @@ function updateRoutesTable() {
             <td>${route.holds}</td>
             <td>${route.type}</td>
             <td>${route.opener}</td>
-            <td class="status-${route.status}">${translateStatus(route.status)}</td>
+            <td class="status-${route.status}">${route.status}</td>
             <td>${route.notes}</td>
             <td>
-                <button id="openEditModal${route.line}" class="edit-btn" title="Modifier cette voie" onclick="console.log('Bouton modifier cliqué pour la ligne ${route.line}'); openEditModal(${route.line})">
+                <button id="edit-btn-${route.id}" class="edit-btn" title="Modifier cette voie" >
                     <i class="fas fa-edit"></i>
                 </button>
             </td>
@@ -206,14 +207,10 @@ function updateRoutesTable() {
 }
 
 // ===== GESTION DES MODALES =====
-function openEditModal(line) {
-    console.log("Ouverture de la modale pour la ligne :", line);
-    const route = routes.find(r => r.line === line);
-    if (!route) return;
-
-    currentEditingLine = line;
-
-    document.getElementById('editModalTitle').textContent = `Éditer la voie : ${route.grade} ${route.color} (Ligne ${line})`;
+async function openEditModal(routeId) {
+    const route = routes.find(r => r.id == routeId);
+    currentEditingLine = routeId;
+    document.getElementById('editModalTitle').textContent = `Modifier la voie ${route.color} sur la ligne ${route.line}`;
     document.getElementById('editLine').value = route.line;
     document.getElementById('editZone').value = route.zone;
     document.getElementById('editGrade').value = route.grade;
@@ -223,23 +220,15 @@ function openEditModal(line) {
     document.getElementById('editOpener').value = route.opener;
     document.getElementById('editStatus').value = route.status;
     document.getElementById('editNotes').value = route.notes;
-
+    // Afficher la modale
     document.getElementById('editRouteModal').style.display = 'block';
-}
-
-
-function closeEditModal() {
-    document.getElementById('editRouteModal').style.display = 'none';
-    currentEditingLine = null;
 }
 
 async function addRoute() {
     // Réinitialiser currentEditingLine pour indiquer qu'il s'agit d'une nouvelle voie
     currentEditingLine = null;
-
     // Mettre à jour le titre de la modale
     document.getElementById('editModalTitle').textContent = 'Ajouter une nouvelle voie';
-
     // Réinitialiser le formulaire avec des valeurs par défaut
     document.getElementById('editLine').value = '';
     document.getElementById('editZone').value = '1';
@@ -250,15 +239,18 @@ async function addRoute() {
     document.getElementById('editOpener').value = '';
     document.getElementById('editStatus').value = 'to_open';
     document.getElementById('editNotes').value = '';
-
     // Afficher la modale
     document.getElementById('editRouteModal').style.display = 'block';
+}
+
+async function closeEditModal() {
+    document.getElementById('editRouteModal').style.display = 'none';
+    currentEditingLine = null;
 }
 
 // Modifier la fonction saveEditedRoute pour gérer à la fois l'ajout et l'édition
 async function saveEditedRoute(event) {
     event.preventDefault();
-
     const routeData = {
         nom: parseInt(document.getElementById('editLine').value),
         zone: parseInt(document.getElementById('editZone').value),
@@ -273,15 +265,19 @@ async function saveEditedRoute(event) {
 
     try {
         let error;
-        
+
         if (currentEditingLine === null) {
             // Création d'une nouvelle voie
+            console.log("Ajout d'une nouvelle voie");
+            console.log("Données envoyées :", routeData);
             const { error: insertError } = await supabaseClient
                 .from('voies')
                 .insert([routeData]);
             error = insertError;
         } else {
             // Modification d'une voie existante
+            console.log("Sauvegarde de la voie modifiée");
+            console.log("Données envoyées :", routeData);
             const { error: updateError } = await supabaseClient
                 .from('voies')
                 .update(routeData)
@@ -290,15 +286,13 @@ async function saveEditedRoute(event) {
         }
 
         if (error) throw error;
-
         await loadData();
         closeEditModal();
-        
-        // Afficher un message de succès
-        alert(currentEditingLine === null ? 
-            'Voie ajoutée avec succès !' : 
-            'Voie modifiée avec succès !');
 
+        // Afficher un message de succès
+        alert(currentEditingLine === null ?
+            'Voie ajoutée avec succès !' :
+            'Voie modifiée avec succès !');
     } catch (error) {
         console.error("Erreur lors de la sauvegarde :", error);
         alert("Erreur lors de la sauvegarde. Vérifiez la console pour plus de détails.");
@@ -762,45 +756,45 @@ function hideAllRoutes() {
 document.addEventListener('DOMContentLoaded', function() {
     // Initialiser Supabase
     window.supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
-
     // Initialiser le schéma du mur
     initWallSchema();
 
-    // Boutons de la modale
+    // Utilisez un événement délégué pour attacher les événements aux boutons .edit-btn
+    document.body.addEventListener('click', function(event) {
+        const button = event.target.closest('.edit-btn');
+        if (button) {
+            const routeId = button.id.replace('edit-btn-', '');
+            openEditModal(routeId);
+        }
+    });
+
+    // Autres événements
     document.getElementById('addRouteBtn').addEventListener('click', addRoute);
     document.getElementById('closeEditModal').addEventListener('click', closeEditModal);
-    document.getElementById('editRouteForm').addEventListener('submit', saveEditedRoute);
-
+    document.getElementById('saveEditModal').addEventListener('click', saveEditedRoute);
     // Filtres et recherche
     document.getElementById('zoneFilter').addEventListener('change', filterRoutes);
     document.getElementById('statusFilter').addEventListener('change', filterRoutes);
     document.getElementById('gradeFilter').addEventListener('change', filterRoutes);
     document.getElementById('searchInput').addEventListener('input', searchRoutes);
-
-    // Événements pour les boutons de la modale
-    
-
     // Pagination
     document.getElementById('prevPage').addEventListener('click', prevPage);
     document.getElementById('nextPage').addEventListener('click', nextPage);
-
     // Tri des colonnes
     document.querySelectorAll('.routes-table th').forEach((th, index) => {
         th.addEventListener('click', () => sortTable(index));
     });
-
     // Boutons de contrôle
     document.getElementById('showAllRoutes').addEventListener('click', showAllRoutes);
     document.getElementById('hideAllRoutes').addEventListener('click', hideAllRoutes);
-
     // Bouton "Retour en haut"
     document.getElementById('backToTop').addEventListener('click', function() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     });
-
     // Chargement initial des données
     loadData();
-
     // Initialiser les graphiques après le chargement des données
     initCharts();
+    // Mettre à jour la date actuelle
+    document.getElementById('currentDate').textContent = new Date().toLocaleDateString('fr-FR');
 });
