@@ -2,14 +2,16 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dashboard Mur Mandela</title>
-    <!-- Font Awesome -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wall Opener Dashboard</title>
+    <!-- Inclure Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <!-- Chart.js -->
+    <!-- Inclure Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
-    <!-- Style CSS -->
+    <!-- Inclure Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Votre fichier CSS -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -179,6 +181,8 @@
                         </div>
                     </div>
                 </div>
+
+
             </section>
 
         </main>
@@ -271,6 +275,7 @@
 
 
     <!-- Script principal -->
-    <script src="script.js"></script>
+    <script type="module" src="script.js"></script>
+
 </body>
 </html>
