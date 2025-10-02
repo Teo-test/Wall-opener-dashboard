@@ -8,9 +8,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <!-- Inclure Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
     <!-- Inclure Supabase -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
     <!-- Votre fichier CSS -->
     <link rel="stylesheet" href="style.css">
 </head>
@@ -83,11 +83,11 @@
                 <div class="section-header">
                     <h2>Gestion des Voies</h2>
                     <div class="table-controls">
-                        <button class="btn-primary" onclick="addRoute()">
+                        <button class="btn-primary" id="addRouteBtn">
                             <i class="fas fa-plus"></i> Ajouter Voie
                         </button>
                         <div class="search-box">
-                            <input type="text" id="searchInput" placeholder="Rechercher..." onkeyup="searchRoutes()">
+                            <input type="text" id="searchInput" placeholder="Rechercher..." >
                             <i class="fas fa-search"></i>
                         </div>
                     </div>
@@ -95,22 +95,21 @@
 
                 <!-- Filtres -->
                 <div class="filters">
-                    <select id="zoneFilter" onchange="filterRoutes()">
+                    <select id="zoneFilter">
                         <option value="">Toutes les zones</option>
                         <option value="1">Zone 1</option>
                         <option value="2">Zone 2</option>
                         <option value="3">Zone 3</option>
                         <option value="4">Zone 4</option>
                         <option value="5">Zone 5</option>
-                        <option value="6">Zone 6</option>
                     </select>
-                    <select id="statusFilter" onchange="filterRoutes()">
+                    <select id="statusFilter">
                         <option value="">Tous statuts</option>
-                        <option value="to_open">À ouvrir</option>
-                        <option value="in_progress">En cours</option>
-                        <option value="completed">Terminé</option>
+                        <option value="À ouvrir">À ouvrir</option>
+                        <option value="En cours">En cours</option>
+                        <option value="Terminé">Terminé</option>
                     </select>
-                    <select id="gradeFilter" onchange="filterRoutes()">
+                    <select id="gradeFilter">
                         <option value="">Toutes cotations</option>
                         <option value="4">Niveau 4</option>
                         <option value="5">Niveau 5</option>
@@ -125,14 +124,14 @@
                     <table class="routes-table">
                         <thead>
                             <tr>
-                                <th onclick="sortTable(0)">Ligne <i class="fas fa-sort"></i></th>
-                                <th onclick="sortTable(1)">Zone <i class="fas fa-sort"></i></th>
-                                <th onclick="sortTable(2)">Cotation <i class="fas fa-sort"></i></th>
-                                <th onclick="sortTable(3)">Couleur <i class="fas fa-sort"></i></th>
-                                <th onclick="sortTable(4)">Prises <i class="fas fa-sort"></i></th>
-                                <th onclick="sortTable(5)">Type <i class="fas fa-sort"></i></th>
-                                <th onclick="sortTable(6)">Ouvreur <i class="fas fa-sort"></i></th>
-                                <th onclick="sortTable(7)">Statut <i class="fas fa-sort"></i></th>
+                                <th>Ligne <i class="fas fa-sort"></i></th>
+                                <th>Zone <i class="fas fa-sort"></i></th>
+                                <th>Cotation <i class="fas fa-sort"></i></th>
+                                <th>Couleur <i class="fas fa-sort"></i></th>
+                                <th>Prises <i class="fas fa-sort"></i></th>
+                                <th>Type <i class="fas fa-sort"></i></th>
+                                <th>Ouvreur <i class="fas fa-sort"></i></th>
+                                <th>Statut <i class="fas fa-sort"></i></th>
                                 <th>Notes</th>
                                 <th>Actions</th>
                             </tr>
@@ -143,9 +142,9 @@
 
                 <!-- Pagination -->
                 <div class="pagination">
-                    <button id="prevPage" onclick="prevPage()" disabled><i class="fas fa-chevron-left"></i></button>
+                    <button id="prevPage" disabled><i class="fas fa-chevron-left"></i></button>
                     <span id="pageInfo">Page 1/1</span>
-                    <button id="nextPage" onclick="nextPage()" disabled><i class="fas fa-chevron-right"></i></button>
+                    <button id="nextPage" disabled><i class="fas fa-chevron-right"></i></button>
                 </div>
             </section>
 
@@ -212,7 +211,6 @@
                             <option value="3">Zone 3</option>
                             <option value="4">Zone 4</option>
                             <option value="5">Zone 5</option>
-                            <option value="6">Zone 6</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -266,7 +264,7 @@
                     </div>
                 </div>
                 <div class="modal-actions">
-                    <button type="button" class="btn-secondary" onclick="closeEditModal()">Annuler</button>
+                    <button type="button" class="btn-secondary" id="closeEditModal">Annuler</button>
                     <button type="submit" class="btn-primary">Sauvegarder</button>
                 </div>
             </form>

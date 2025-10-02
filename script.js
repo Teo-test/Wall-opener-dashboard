@@ -93,55 +93,56 @@ function translateStatus(status) {
 // ===== CHARGEMENT DES DONNÉES =====
 async function loadData() {
     try {
-        const { data: routesData, error: routesError } = await supabaseClient
-            .from('voies').select('*');
+        const { data: routesData, error: routesError } = await supabaseClient.from('voies').select('*');
+        const { data: reviewsData, error: reviewsError } = await supabaseClient.from('avis').select('*');
 
         if (routesError) throw routesError;
+        if (reviewsError) throw reviewsError;
+        if (!routesData || !Array.isArray(routesData)) {
+            throw new Error("Les données des voies ne sont pas dans le format attendu");
+        }
 
         routes = routesData.map(route => ({
             line: route.nom,
             zone: route.zone,
-            grade: route.grade,
-            color: route.color,
-            holds: route.nb_prises,
-            type: route.type,
-            opener: route.ouvreur,
-            status: route.statut,
+            grade: route.grade || 'Non défini',
+            color: route.color || 'Non défini',
+            holds: route.nb_prises || 0,
+            type: route.type || 'Non défini',
+            opener: route.ouvreur || 'Non défini',
+            status: route.statut || 'to_open',
             notes: route.commentaire || ""
         }));
 
-        filteredRoutes = [...routes];
-        updateDashboard();
-    } catch (error) {
-        console.error("Erreur de chargement :", error);
-        alert("Erreur de chargement des données.");
-    }
-
-    try {
-        const { data: reviewsData, error: reviewsError } = await supabaseClient
-            .from('avis').select('*');
-
-        if (reviewsError) throw reviewsError;
-
-        reviews = reviewsData.map(review => ({
+        reviews = reviewsData?.map(review => ({
             id: review.id,
             voie_id: review.voie_id,
             utilisateur: review.utilisateur,
             commentaire: review.commentaire || "",
             note: review.note,
             date: review.date
-        }));
+        })) || [];
+
+        filteredRoutes = [...routes];
+        updateDashboard();
     } catch (error) {
-        console.error("Erreur de chargement des avis :", error);
-        alert("Erreur de chargement des avis.");
+        console.error("Erreur lors du chargement des données:", error);
+        alert("Erreur lors du chargement des données. Vérifiez la console pour plus de détails.");
     }
 }
 
 // ===== MISE À JOUR DU DASHBOARD =====
 function updateDashboard() {
+    if (!routes || routes.length === 0) {
+        console.warn("Aucune donnée disponible pour mettre à jour le dashboard");
+        return;
+    }
+
     updateKPIs();
-    updateRoutesTable();
     initCharts();
+    updateRoutesTable();
+    initWallSchema();
+
     document.getElementById('currentDate').textContent = new Date().toLocaleDateString('fr-FR');
 }
 
@@ -194,7 +195,7 @@ function updateRoutesTable() {
             <td class="status-${route.status}">${translateStatus(route.status)}</td>
             <td>${route.notes}</td>
             <td>
-                <button onclick="openEditModal(${route.line})" class="edit-btn" title="Modifier cette voie">
+                <button id="openEditModal${route.line}" class="edit-btn" title="Modifier cette voie" onclick="console.log('Bouton modifier cliqué pour la ligne ${route.line}'); openEditModal(${route.line})">
                     <i class="fas fa-edit"></i>
                 </button>
             </td>
@@ -206,6 +207,7 @@ function updateRoutesTable() {
 
 // ===== GESTION DES MODALES =====
 function openEditModal(line) {
+    console.log("Ouverture de la modale pour la ligne :", line);
     const route = routes.find(r => r.line === line);
     if (!route) return;
 
@@ -225,43 +227,81 @@ function openEditModal(line) {
     document.getElementById('editRouteModal').style.display = 'block';
 }
 
+
 function closeEditModal() {
     document.getElementById('editRouteModal').style.display = 'none';
     currentEditingLine = null;
 }
 
+async function addRoute() {
+    // Réinitialiser currentEditingLine pour indiquer qu'il s'agit d'une nouvelle voie
+    currentEditingLine = null;
+
+    // Mettre à jour le titre de la modale
+    document.getElementById('editModalTitle').textContent = 'Ajouter une nouvelle voie';
+
+    // Réinitialiser le formulaire avec des valeurs par défaut
+    document.getElementById('editLine').value = '';
+    document.getElementById('editZone').value = '1';
+    document.getElementById('editGrade').value = '';
+    document.getElementById('editColor').value = 'Jaune';
+    document.getElementById('editHolds').value = '';
+    document.getElementById('editType').value = 'Dalle';
+    document.getElementById('editOpener').value = '';
+    document.getElementById('editStatus').value = 'to_open';
+    document.getElementById('editNotes').value = '';
+
+    // Afficher la modale
+    document.getElementById('editRouteModal').style.display = 'block';
+}
+
+// Modifier la fonction saveEditedRoute pour gérer à la fois l'ajout et l'édition
 async function saveEditedRoute(event) {
     event.preventDefault();
 
-    const line = currentEditingLine;
-    const routeIndex = routes.findIndex(r => r.line === line);
-    if (routeIndex === -1) return;
-
-    const updatedRoute = {
-        Line: parseInt(document.getElementById('editLine').value),
-        Zone: parseInt(document.getElementById('editZone').value),
-        Grade: document.getElementById('editGrade').value,
-        Color: document.getElementById('editColor').value,
-        Holds: parseInt(document.getElementById('editHolds').value),
-        Type: document.getElementById('editType').value,
-        Opener: document.getElementById('editOpener').value,
-        Status: document.getElementById('editStatus').value,
-        Notes: document.getElementById('editNotes').value
+    const routeData = {
+        nom: parseInt(document.getElementById('editLine').value),
+        zone: parseInt(document.getElementById('editZone').value),
+        grade: document.getElementById('editGrade').value,
+        color: document.getElementById('editColor').value,
+        nb_prises: parseInt(document.getElementById('editHolds').value),
+        type: document.getElementById('editType').value,
+        ouvreur: document.getElementById('editOpener').value,
+        statut: document.getElementById('editStatus').value,
+        commentaire: document.getElementById('editNotes').value
     };
 
     try {
-        const { error } = await supabase
-            .from('voies')
-            .update(updatedRoute)
-            .eq('Line', line);
+        let error;
+        
+        if (currentEditingLine === null) {
+            // Création d'une nouvelle voie
+            const { error: insertError } = await supabaseClient
+                .from('voies')
+                .insert([routeData]);
+            error = insertError;
+        } else {
+            // Modification d'une voie existante
+            const { error: updateError } = await supabaseClient
+                .from('voies')
+                .update(routeData)
+                .eq('nom', currentEditingLine);
+            error = updateError;
+        }
 
         if (error) throw error;
 
         await loadData();
         closeEditModal();
+        
+        // Afficher un message de succès
+        alert(currentEditingLine === null ? 
+            'Voie ajoutée avec succès !' : 
+            'Voie modifiée avec succès !');
+
     } catch (error) {
-        console.error("Erreur lors de la mise à jour :", error);
-        alert("Erreur lors de la mise à jour. Vérifie la console.");
+        console.error("Erreur lors de la sauvegarde :", error);
+        alert("Erreur lors de la sauvegarde. Vérifiez la console pour plus de détails.");
     }
 }
 
@@ -281,7 +321,6 @@ function prevPage() {
     }
 }
 
-// ===== GESTION DE LA PAGINATION =====
 function nextPage() {
     const totalPages = Math.ceil(filteredRoutes.length / rowsPerPage);
     if (currentPage < totalPages) {
@@ -333,7 +372,7 @@ function searchRoutes() {
         ? [...routes]
         : routes.filter(route =>
             route.line.toString().includes(searchTerm) ||
-            `Zone ${route.zone}`.toLowerCase().includes(searchTerm) ||
+            route.zone.toLowerCase().includes(searchTerm) ||
             route.grade.toLowerCase().includes(searchTerm) ||
             route.color.toLowerCase().includes(searchTerm) ||
             route.holds.toString().includes(searchTerm) ||
@@ -348,7 +387,7 @@ function searchRoutes() {
 
 // ===== GESTION DES GRAPHIQUES =====
 function initCharts() {
-    // Destroy existing charts if they exist
+    // Destruction des graphiques existants s'ils existent
     if (gradeChart) gradeChart.destroy();
     if (zoneChart) zoneChart.destroy();
     if (colorChart) colorChart.destroy();
@@ -356,19 +395,17 @@ function initCharts() {
     // Graphique par cotation
     const grades = [...new Set(filteredRoutes.map(r => r.grade))]
         .filter(grade => grade && !["inconnu", "false", ""].includes(grade.toLowerCase()));
+
     const sortedGrades = sortGrades(grades);
     const gradeCounts = sortedGrades.map(grade =>
         filteredRoutes.filter(r => r.grade.toLowerCase() === grade.toLowerCase()).length
     );
 
-    console.log("sortedGrades:", sortedGrades);
-    console.log("gradeCounts:", gradeCounts);
-    if (!sortedGrades || !gradeCounts || sortedGrades.length === 0) {
-        console.error("Données manquantes pour le graphique :", { sortedGrades, gradeCounts });
+    const gradeCtx = document.getElementById('gradeChart');
+    if (!gradeCtx) {
+        console.error("Canvas 'gradeChart' non trouvé");
         return;
     }
-
-    const gradeCtx = document.getElementById('gradeChart');
     if (gradeCtx) {
         gradeChart = new Chart(gradeCtx, {
             type: 'bar',
@@ -631,7 +668,7 @@ function initWallSchema() {
         svgOverlay.appendChild(path);
     });
 
-    showAllRoutes();
+    hideAllRoutes();
 }
 
 function showZoneRoutes(zoneId) {
@@ -729,6 +766,29 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialiser le schéma du mur
     initWallSchema();
 
+    // Boutons de la modale
+    document.getElementById('addRouteBtn').addEventListener('click', addRoute);
+    document.getElementById('closeEditModal').addEventListener('click', closeEditModal);
+    document.getElementById('editRouteForm').addEventListener('submit', saveEditedRoute);
+
+    // Filtres et recherche
+    document.getElementById('zoneFilter').addEventListener('change', filterRoutes);
+    document.getElementById('statusFilter').addEventListener('change', filterRoutes);
+    document.getElementById('gradeFilter').addEventListener('change', filterRoutes);
+    document.getElementById('searchInput').addEventListener('input', searchRoutes);
+
+    // Événements pour les boutons de la modale
+    
+
+    // Pagination
+    document.getElementById('prevPage').addEventListener('click', prevPage);
+    document.getElementById('nextPage').addEventListener('click', nextPage);
+
+    // Tri des colonnes
+    document.querySelectorAll('.routes-table th').forEach((th, index) => {
+        th.addEventListener('click', () => sortTable(index));
+    });
+
     // Boutons de contrôle
     document.getElementById('showAllRoutes').addEventListener('click', showAllRoutes);
     document.getElementById('hideAllRoutes').addEventListener('click', hideAllRoutes);
@@ -742,5 +802,5 @@ document.addEventListener('DOMContentLoaded', function() {
     loadData();
 
     // Initialiser les graphiques après le chargement des données
-    // initCharts();
+    initCharts();
 });
