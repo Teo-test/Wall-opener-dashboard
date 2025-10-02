@@ -74,6 +74,11 @@ header h1 {
     margin-bottom: 20px;
 }
 
+#gradeChart, #zoneChart, #colorChart {
+    width: 100% !important;
+    height: 100% !important;
+}
+
 .chart-container {
     background: white;
     border-radius: var(--border-radius);

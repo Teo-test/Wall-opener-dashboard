@@ -68,6 +68,8 @@ const LINE_COORDS = {
 
 // ===== DONNÉES GLOBALES =====
 let routes = [];
+let reviews = [];
+let gradeChart, zoneChart, colorChart;
 let filteredRoutes = [];
 let currentPage = 1;
 const rowsPerPage = 10;
@@ -91,11 +93,10 @@ function translateStatus(status) {
 // ===== CHARGEMENT DES DONNÉES =====
 async function loadData() {
     try {
-        const { data: routesData, error } = await supabaseClient
-            .from('voies')
-            .select('*');
+        const { data: routesData, error: routesError } = await supabaseClient
+            .from('voies').select('*');
 
-        if (error) throw error;
+        if (routesError) throw routesError;
 
         routes = routesData.map(route => ({
             line: route.nom,
@@ -114,6 +115,25 @@ async function loadData() {
     } catch (error) {
         console.error("Erreur de chargement :", error);
         alert("Erreur de chargement des données.");
+    }
+
+    try {
+        const { data: reviewsData, error: reviewsError } = await supabaseClient
+            .from('avis').select('*');
+
+        if (reviewsError) throw reviewsError;
+
+        reviews = reviewsData.map(review => ({
+            id: review.id,
+            voie_id: review.voie_id,
+            utilisateur: review.utilisateur,
+            commentaire: review.commentaire || "",
+            note: review.note,
+            date: review.date
+        }));
+    } catch (error) {
+        console.error("Erreur de chargement des avis :", error);
+        alert("Erreur de chargement des avis.");
     }
 }
 
@@ -261,6 +281,7 @@ function prevPage() {
     }
 }
 
+// ===== GESTION DE LA PAGINATION =====
 function nextPage() {
     const totalPages = Math.ceil(filteredRoutes.length / rowsPerPage);
     if (currentPage < totalPages) {
@@ -327,6 +348,11 @@ function searchRoutes() {
 
 // ===== GESTION DES GRAPHIQUES =====
 function initCharts() {
+    // Destroy existing charts if they exist
+    if (gradeChart) gradeChart.destroy();
+    if (zoneChart) zoneChart.destroy();
+    if (colorChart) colorChart.destroy();
+
     // Graphique par cotation
     const grades = [...new Set(filteredRoutes.map(r => r.grade))]
         .filter(grade => grade && !["inconnu", "false", ""].includes(grade.toLowerCase()));
@@ -335,9 +361,16 @@ function initCharts() {
         filteredRoutes.filter(r => r.grade.toLowerCase() === grade.toLowerCase()).length
     );
 
+    console.log("sortedGrades:", sortedGrades);
+    console.log("gradeCounts:", gradeCounts);
+    if (!sortedGrades || !gradeCounts || sortedGrades.length === 0) {
+        console.error("Données manquantes pour le graphique :", { sortedGrades, gradeCounts });
+        return;
+    }
+
     const gradeCtx = document.getElementById('gradeChart');
     if (gradeCtx) {
-        new Chart(gradeCtx, {
+        gradeChart = new Chart(gradeCtx, {
             type: 'bar',
             plugins: [ChartDataLabels],
             data: {
@@ -420,7 +453,7 @@ function initCharts() {
             categoryPercentage: 0.7
         }));
 
-        new Chart(zoneCtx, {
+        zoneChart = new Chart(zoneCtx, {
             type: 'bar',
             data: {
                 labels: uniqueZones.map(zone => `Zone ${zone}`),
@@ -489,7 +522,7 @@ function initCharts() {
         );
         const colorBackgrounds = colors.map(color => getColorCode(color));
 
-        new Chart(colorCtx, {
+        colorChart = new Chart(colorCtx, {
             type: 'doughnut',
             data: {
                 labels: colors,
@@ -707,4 +740,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Chargement initial des données
     loadData();
+
+    // Initialiser les graphiques après le chargement des données
+    // initCharts();
 });
